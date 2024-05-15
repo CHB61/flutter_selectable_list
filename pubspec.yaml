@@ -1,10 +1,10 @@
 name: flutter_selectable_list
 description: "A widget library that provides an intuitive solution to build and manage selectable lists."
 version: 0.0.1
-repository: https://github.com/CHB61/flutter-multi-select
-issue_tracker: https://github.com/CHB61/flutter-multi-select
-documentation: https://github.com/CHB61/flutter-multi-select
-homepage: https://github.com/CHB61/flutter-multi-select
+repository: https://github.com/CHB61/flutter_selectable_list
+issue_tracker: https://github.com/CHB61/flutter_selectable_list
+documentation: https://github.com/CHB61/flutter_selectable_list
+homepage: https://github.com/CHB61/flutter_selectable_list
 
 environment:
   sdk: '>=3.3.3 <4.0.0'

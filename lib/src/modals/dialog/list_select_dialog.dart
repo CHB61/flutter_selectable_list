@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_selectable_list/selectable_list.dart';
-import 'package:flutter_selectable_list/selectable_list_anchor.dart';
-import 'package:flutter_selectable_list/modals/modal_defaults_mixin.dart';
+import '../../selectable_list.dart';
+import '../../selectable_list_anchor.dart';
+import '../../modals/modal_defaults_mixin.dart';
 
 /// Dialog widget that contains a SelectableList.
 ///

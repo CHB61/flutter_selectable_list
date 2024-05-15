@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_selectable_list/selectable_list_anchor.dart';
+import 'selectable_list_anchor.dart';
 
 enum ProgressIndicatorPosition {
   center,

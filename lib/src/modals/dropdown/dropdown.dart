@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_selectable_list/modals/side_sheet/side_sheet_theme.dart';
+import '../../modals/side_sheet/side_sheet_theme.dart';
 
 enum DropdownAligmnent {
   center,
