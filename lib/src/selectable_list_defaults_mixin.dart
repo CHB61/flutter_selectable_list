@@ -78,7 +78,6 @@ class __DefaultHeaderState<T> extends State<_DefaultHeader<T>> {
                     focusNode: _focusNode,
                     onChanged: widget.onSearchTextChanged ?? _search,
                     decoration: InputDecoration(
-                      fillColor: Colors.lightBlue,
                       hintText: 'Search',
                       prefixIcon: IconButton(
                         onPressed: () {
