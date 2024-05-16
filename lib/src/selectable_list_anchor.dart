@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import 'modals/bottom_sheet/list_select_bottomsheet.dart';
-import 'modals/dialog/list_select_dialog.dart';
-import 'modals/dropdown/dropdown.dart';
-import 'modals/dropdown/list_select_dropdown.dart';
+import 'selectable_list_bottomsheet.dart';
+import 'selectable_list_dialog.dart';
+import 'modal/dropdown.dart';
+import 'selectable_list_dropdown.dart';
 import 'selectable_list.dart';
-import 'modals/side_sheet/list_select_side_sheet.dart';
-import 'modals/side_sheet/side_sheet.dart';
+import 'selectable_list_side_sheet.dart';
+import 'modal/side_sheet.dart';
 
 class SelectableListAnchor<T> extends StatefulWidget {
   final Widget? actions;

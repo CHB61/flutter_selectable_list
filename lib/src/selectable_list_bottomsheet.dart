@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../selectable_list.dart';
-import '../../selectable_list_anchor.dart';
-import '../modal_defaults_mixin.dart';
+import 'selectable_list.dart';
+import 'selectable_list_anchor.dart';
+import 'selectable_list_defaults_mixin.dart';
 
 class ListSelectBottomSheet<T> extends StatefulWidget {
   final Widget? actions;
@@ -36,11 +36,12 @@ class ListSelectBottomSheet<T> extends StatefulWidget {
 
   final double initialChildSize;
 
-  // final Widget Function(T)? itemTitle;
+  final bool isThreeLine;
+
   final String Function(T)? itemTitle;
 
-  final double minChildSize;
   final double maxChildSize;
+  final double minChildSize;
 
   final bool multiselect;
 
@@ -60,7 +61,6 @@ class ListSelectBottomSheet<T> extends StatefulWidget {
   final Widget Function(TextEditingController, Widget)? searchBuilder;
   final Widget Function(T)? secondary;
   final Widget Function(T)? subtitle;
-  final bool isThreeLine;
 
   final ShapeBorder? shape;
 
@@ -153,7 +153,7 @@ class _ListSelectBottomSheetState<T> extends State<ListSelectBottomSheet<T>>
   @override
   Widget build(BuildContext context) {
     BottomSheetThemeData bottomSheetTheme = Theme.of(context).bottomSheetTheme;
-    final BottomSheetThemeData defaults = _BottomSheetDefaultsM3(context);
+    final _BottomSheetDefaultsM3 defaults = _BottomSheetDefaultsM3(context);
 
     return DraggableScrollableSheet(
       initialChildSize: widget.initialChildSize,
@@ -169,7 +169,7 @@ class _ListSelectBottomSheetState<T> extends State<ListSelectBottomSheet<T>>
                   ? 0
                   : bottomSheetTheme.elevation ?? 6),
           surfaceTintColor: Theme.of(context).colorScheme.surfaceTint,
-          shape: widget.shape ?? bottomSheetTheme.shape ?? defaults.shape!,
+          shape: widget.shape ?? bottomSheetTheme.shape ?? defaults.shape,
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
@@ -234,34 +234,21 @@ class _ListSelectBottomSheetState<T> extends State<ListSelectBottomSheet<T>>
   }
 }
 
-class _BottomSheetDefaultsM3 extends BottomSheetThemeData {
-  _BottomSheetDefaultsM3(this.context)
-      : super(
-          elevation: 1.0,
-          modalElevation: 1.0,
-          shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.vertical(top: Radius.circular(28.0))),
-          constraints: const BoxConstraints(maxWidth: 640),
-        );
+class _BottomSheetDefaultsM3 {
+  _BottomSheetDefaultsM3(this.context);
 
   final BuildContext context;
   late final ColorScheme _colors = Theme.of(context).colorScheme;
 
-  @override
+  double get elevation => 6.0;
+  ShapeBorder get shape => const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(28.0)),
+      );
+  double get modalElevation => 1.0;
+  BoxConstraints get constraints => const BoxConstraints(maxWidth: 640);
   Color? get backgroundColor => _colors.surface;
-
-  @override
   Color? get surfaceTintColor => _colors.surfaceTint;
-
-  @override
   Color? get shadowColor => Colors.transparent;
-
-  @override
   Color? get dragHandleColor => _colors.onSurfaceVariant.withOpacity(0.4);
-
-  @override
   Size? get dragHandleSize => const Size(32, 4);
-
-  @override
-  BoxConstraints? get constraints => const BoxConstraints(maxWidth: 640.0);
 }

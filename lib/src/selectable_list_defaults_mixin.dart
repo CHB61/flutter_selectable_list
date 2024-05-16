@@ -29,10 +29,6 @@ mixin ModalDefaultsMixin<T> {
       onConfirm: onConfirm,
     );
   }
-
-  getDefaultDialogTheme(BuildContext context) {
-    return _DialogDefaultsM3(context);
-  }
 }
 
 class _DefaultHeader<T> extends StatefulWidget {
@@ -173,47 +169,4 @@ class _DefaultActions<T> extends StatelessWidget {
       ),
     );
   }
-}
-
-/// Copied from dialog.dart
-///
-/// Properties like elevation are passed to SelectableList for widgets like the
-/// default ListTile and ProgressIndicator to match the elevation of the Dialog.
-///
-/// Properties in the DialogTheme are null by default, so they cannot be relied
-/// on.
-class _DialogDefaultsM3 extends DialogTheme {
-  _DialogDefaultsM3(this.context)
-      : super(
-          alignment: Alignment.center,
-          elevation: 6.0,
-          shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(28.0))),
-        );
-
-  final BuildContext context;
-  late final ColorScheme _colors = Theme.of(context).colorScheme;
-  late final TextTheme _textTheme = Theme.of(context).textTheme;
-
-  @override
-  Color? get iconColor => _colors.secondary;
-
-  @override
-  Color? get backgroundColor => _colors.surface;
-
-  @override
-  Color? get shadowColor => Colors.transparent;
-
-  @override
-  Color? get surfaceTintColor => _colors.surfaceTint;
-
-  @override
-  TextStyle? get titleTextStyle => _textTheme.headlineSmall;
-
-  @override
-  TextStyle? get contentTextStyle => _textTheme.bodyMedium;
-
-  @override
-  EdgeInsetsGeometry? get actionsPadding =>
-      const EdgeInsets.only(left: 24.0, right: 24.0, bottom: 24.0);
 }

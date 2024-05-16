@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../modals/side_sheet/side_sheet_theme.dart';
 
 Future<T?> showModalSideSheet<T>({
   Color barrierColor = const Color(0x80000000),
@@ -28,7 +27,7 @@ Future<T?> showModalSideSheet<T>({
 class SideSheet extends StatelessWidget {
   final Widget child;
   final double? elevation;
-  final EdgeInsets? insetPadding;
+  final EdgeInsetsGeometry? insetPadding;
   final Color? shadowColor;
   final ShapeBorder? shape;
   final Color? surfaceTintColor;
@@ -47,17 +46,17 @@ class SideSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    SideSheetTheme defaults = _SideSheetDefaultsM3(context);
+    _SideSheetDefaultsM3 defaults = _SideSheetDefaultsM3(context);
 
     return Padding(
-      padding: insetPadding ?? defaults.insetPadding!,
+      padding: insetPadding ?? defaults.insetPadding,
       child: Material(
-        elevation: elevation ?? defaults.elevation!,
+        elevation: elevation ?? defaults.elevation,
         clipBehavior: Clip.hardEdge,
         color: backgroundColor ?? defaults.backgroundColor,
         shadowColor: shadowColor ?? defaults.shadowColor,
         surfaceTintColor: surfaceTintColor ?? defaults.surfaceTintColor,
-        shape: shape ?? defaults.shape!,
+        shape: shape ?? defaults.shape,
         child: child,
       ),
     );
@@ -161,31 +160,19 @@ class SideSheetRoute<T> extends PopupRoute<T> {
   Duration get transitionDuration => _transitionDuration;
 }
 
-class _SideSheetDefaultsM3 extends SideSheetTheme {
-  _SideSheetDefaultsM3(this.context)
-      : super(
-          alignment: Alignment.center,
-          elevation: 6.0,
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(28.0)),
-          ),
-        );
+class _SideSheetDefaultsM3 {
+  _SideSheetDefaultsM3(this.context);
 
   final BuildContext context;
   late final ColorScheme _colors = Theme.of(context).colorScheme;
 
-  @override
-  Color? get iconColor => _colors.secondary;
-
-  @override
+  Alignment get alignment => Alignment.center;
+  double get elevation => 6.0;
+  EdgeInsetsGeometry get insetPadding => const EdgeInsets.all(8);
+  ShapeBorder get shape => const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(28.0)),
+      );
   Color? get backgroundColor => _colors.surface;
-
-  @override
   Color? get shadowColor => Colors.transparent;
-
-  @override
   Color? get surfaceTintColor => _colors.surfaceTint;
-
-  @override
-  EdgeInsetsGeometry? get insetPadding => const EdgeInsets.all(8);
 }

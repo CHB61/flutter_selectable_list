@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../selectable_list.dart';
-import '../../selectable_list_anchor.dart';
-import '../../modals/modal_defaults_mixin.dart';
+import 'selectable_list.dart';
+import 'selectable_list_anchor.dart';
+import 'selectable_list_defaults_mixin.dart';
 
 /// Dialog widget that contains a SelectableList.
 ///
@@ -169,11 +169,11 @@ class _ListSelectDialogState<T> extends State<ListSelectDialog<T>>
   @override
   Widget build(BuildContext context) {
     DialogTheme dialogTheme = Theme.of(context).dialogTheme;
-    DialogTheme defaults = getDefaultDialogTheme(context);
+    _DialogDefaultsM3 defaults = _DialogDefaultsM3(context);
 
     // review - only passing to SelectableList?
     double elevation =
-        widget.elevation ?? dialogTheme.elevation ?? defaults.elevation!;
+        widget.elevation ?? dialogTheme.elevation ?? defaults.elevation;
 
     return Dialog(
       backgroundColor: widget.backgroundColor,
@@ -205,7 +205,7 @@ class _ListSelectDialogState<T> extends State<ListSelectDialog<T>>
                 color: widget.dividerColor,
               ),
               Expanded(
-                // Controller is non nullable in ListSelectDialog, therefore
+                // Controller is non nullable in SelectableListDialog, therefore
                 // 'initialValue' and 'items' cannot be used due to the assert
                 // in SelectableList.
                 child: widget.multiselect
@@ -259,4 +259,26 @@ class _ListSelectDialogState<T> extends State<ListSelectDialog<T>>
       ),
     );
   }
+}
+
+class _DialogDefaultsM3 {
+  _DialogDefaultsM3(this.context);
+
+  final BuildContext context;
+  late final ColorScheme _colors = Theme.of(context).colorScheme;
+  late final TextTheme _textTheme = Theme.of(context).textTheme;
+
+  Alignment get alignment => Alignment.center;
+  double get elevation => 6.0;
+  ShapeBorder get shape => const RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(28.0)),
+      );
+  // Color? get iconColor => _colors.secondary;
+  Color? get backgroundColor => _colors.surface;
+  Color? get shadowColor => Colors.transparent;
+  Color? get surfaceTintColor => _colors.surfaceTint;
+  TextStyle? get titleTextStyle => _textTheme.headlineSmall;
+  TextStyle? get contentTextStyle => _textTheme.bodyMedium;
+  EdgeInsetsGeometry? get actionsPadding =>
+      const EdgeInsets.only(left: 24.0, right: 24.0, bottom: 24.0);
 }

@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
-import '../../selectable_list.dart';
-import '../../selectable_list_anchor.dart';
-import '../../modals/modal_defaults_mixin.dart';
-import '../../modals/side_sheet/side_sheet.dart';
-import '../../modals/side_sheet/side_sheet_theme.dart';
+import 'selectable_list.dart';
+import 'selectable_list_anchor.dart';
+import 'selectable_list_defaults_mixin.dart';
 
-class ListSelectSideSheet<T> extends StatefulWidget {
+class ListSelectDropdown<T> extends StatefulWidget {
   final Widget? actions;
 
   /// Sets the backgroundColor of the [Dialog] and the tileColor of [CheckboxListTile].
@@ -17,10 +15,13 @@ class ListSelectSideSheet<T> extends StatefulWidget {
   /// not be visible on the default list items, making them appear lighter.
   final Color? backgroundColor;
 
-  /// Replaces the default header.
+  /// Overrides [headerTitle].
   final Widget? header;
 
+  /// The title of the Dialog.
+  ///
   /// The default value is "Select" and the [TextStyle] uses [TextTheme.titleLarge].
+  /// Override this widget by using the [dialogHeader].
   final String? headerTitle;
 
   /// If this is null, then [DividerThemeData.color] is used. If that is also
@@ -55,24 +56,22 @@ class ListSelectSideSheet<T> extends StatefulWidget {
   final SingleSelectController<T>? singleSelectController;
   final MultiSelectController<T>? multiSelectController;
 
+  final EdgeInsetsGeometry? padding;
+
   /// Widget to be displayed when [SelectableListController.loading] is `true`.
   /// The position of this widget can be set using the [SelectableListController.progressIndicatorPosition].
   final Widget? progressIndicator;
 
-  /// Enables the default search functionality. Has no effect when [header] is provided.
+  /// Enables the default search functionality. Has no effect when [dialogHeader] is provided.
   final bool searchable;
-
   final Widget Function(TextEditingController, Widget)? searchBuilder;
   final Widget Function(T)? secondary;
-
-  final ShapeBorder? shape;
-
   final Widget Function(T)? subtitle;
   final bool isThreeLine;
 
   final Function? onMaxScrollExtent;
 
-  const ListSelectSideSheet.single({
+  const ListSelectDropdown.single({
     super.key,
     this.actions,
     this.backgroundColor,
@@ -88,11 +87,11 @@ class ListSelectSideSheet<T> extends StatefulWidget {
     this.onMaxScrollExtent,
     this.onSearchTextChanged,
     void Function(T?)? onSelectionChanged,
+    this.padding,
     this.progressIndicator,
     this.searchable = false,
     this.searchBuilder,
     this.secondary,
-    this.shape,
     this.subtitle,
   })  : multiselect = false,
         multiSelectController = null,
@@ -102,7 +101,7 @@ class ListSelectSideSheet<T> extends StatefulWidget {
         onSingleSelectionChanged = onSelectionChanged,
         singleSelectController = controller;
 
-  const ListSelectSideSheet.multi({
+  const ListSelectDropdown.multi({
     super.key,
     this.actions,
     this.backgroundColor,
@@ -118,11 +117,11 @@ class ListSelectSideSheet<T> extends StatefulWidget {
     this.onMaxScrollExtent,
     this.onSearchTextChanged,
     void Function(List<T>, T, bool)? onSelectionChanged,
+    this.padding,
     this.progressIndicator,
     this.searchable = false,
     this.searchBuilder,
     this.secondary,
-    this.shape,
     this.subtitle,
   })  : multiselect = true,
         singleSelectController = null,
@@ -133,10 +132,10 @@ class ListSelectSideSheet<T> extends StatefulWidget {
         multiSelectController = controller;
 
   @override
-  State<ListSelectSideSheet<T>> createState() => _ListSelectSideSheetState<T>();
+  State<ListSelectDropdown<T>> createState() => _ListSelectDropdownState<T>();
 }
 
-class _ListSelectSideSheetState<T> extends State<ListSelectSideSheet<T>>
+class _ListSelectDropdownState<T> extends State<ListSelectDropdown<T>>
     with ModalDefaultsMixin<T> {
   // Stores the controller value when opened (initState is invoked).
   // Used to pop with the initial value when cancel is tapped.
@@ -159,108 +158,55 @@ class _ListSelectSideSheetState<T> extends State<ListSelectSideSheet<T>>
 
   @override
   Widget build(BuildContext context) {
-    SideSheetTheme defaults = _SideSheetDefaultsM3(context);
-
-    return SideSheet(
-      backgroundColor: widget.backgroundColor,
-      shape: widget.shape,
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            widget.header ??
-                getDefaultModalHeader(
-                  controller: _controller,
-                  headerTitle: widget.headerTitle,
-                  searchable: widget.searchable,
-                  onSearchTextChanged: widget.onSearchTextChanged,
+    return Padding(
+      padding: widget.padding ?? EdgeInsets.zero,
+      child: Column(
+        children: [
+          widget.header ?? Container(),
+          if (widget.header != null)
+            Divider(
+              height: 1,
+              color: widget.dividerColor,
+            ),
+          widget.multiselect
+              ? Expanded(
+                  child: SelectableList<T>.multi(
+                    backgroundColor: widget.backgroundColor,
+                    controller: _controller as MultiSelectController<T>,
+                    elevation: widget.elevation ?? 6,
+                    isThreeLine: widget.isThreeLine,
+                    itemBuilder: widget.itemBuilder,
+                    itemTitle: widget.itemTitle,
+                    onSelectionChanged: widget.onMultiSelectionChanged,
+                    progressIndicator: widget.progressIndicator,
+                    secondary: widget.secondary,
+                    subtitle: widget.subtitle,
+                    onScrollThresholdReached: widget.onMaxScrollExtent,
+                    searchBuilder: widget.searchBuilder,
+                  ),
+                )
+              : SelectableList.single(
+                  backgroundColor: widget.backgroundColor,
+                  controller: _controller as SingleSelectController<T>,
+                  elevation: widget.elevation ?? 6,
+                  isThreeLine: widget.isThreeLine,
+                  itemBuilder: widget.itemBuilder,
                   itemTitle: widget.itemTitle,
+                  onSelectionChanged: widget.onSingleSelectionChanged,
+                  progressIndicator: widget.progressIndicator,
+                  secondary: widget.secondary,
+                  subtitle: widget.subtitle,
+                  onScrollThresholdReached: widget.onMaxScrollExtent,
+                  searchBuilder: widget.searchBuilder,
                 ),
+          if (widget.header != null)
             Divider(
               height: 1,
               color: widget.dividerColor,
             ),
-            Expanded(
-              child: widget.multiselect
-                  ? SelectableList<T>.multi(
-                      backgroundColor: widget.backgroundColor,
-                      controller: _controller as MultiSelectController<T>,
-                      elevation: widget.elevation ?? defaults.elevation,
-                      isThreeLine: widget.isThreeLine,
-                      itemBuilder: widget.itemBuilder,
-                      itemTitle: widget.itemTitle,
-                      onSelectionChanged: widget.onMultiSelectionChanged,
-                      progressIndicator: widget.progressIndicator,
-                      secondary: widget.secondary,
-                      subtitle: widget.subtitle,
-                      onScrollThresholdReached: widget.onMaxScrollExtent,
-                      searchBuilder: widget.searchBuilder,
-                    )
-                  : SelectableList.single(
-                      backgroundColor: widget.backgroundColor,
-                      controller: _controller as SingleSelectController<T>,
-                      elevation: widget.elevation ?? defaults.elevation,
-                      isThreeLine: widget.isThreeLine,
-                      itemBuilder: widget.itemBuilder,
-                      itemTitle: widget.itemTitle,
-                      onSelectionChanged: widget.onSingleSelectionChanged,
-                      progressIndicator: widget.progressIndicator,
-                      secondary: widget.secondary,
-                      subtitle: widget.subtitle,
-                      onScrollThresholdReached: widget.onMaxScrollExtent,
-                      searchBuilder: widget.searchBuilder,
-                    ),
-            ),
-            Divider(
-              height: 1,
-              color: widget.dividerColor,
-            ),
-            widget.actions ??
-                getDefaultModalActions(
-                  controller: _controller,
-                  originalValue: originalValue,
-                  onConfirm: () {
-                    Navigator.pop(context, _controller.value);
-                    widget.multiselect
-                        ? widget.onConfirmMulti?.call(_controller.value)
-                        : widget.onConfirmSingle?.call(_controller.value);
-                  },
-                ),
-          ],
-        ),
+          widget.actions ?? Container(),
+        ],
       ),
     );
   }
-}
-
-class _SideSheetDefaultsM3 extends SideSheetTheme {
-  _SideSheetDefaultsM3(this.context)
-      : super(
-          alignment: Alignment.center,
-          elevation: 6.0,
-          shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(28.0))),
-        );
-
-  final BuildContext context;
-  late final ColorScheme _colors = Theme.of(context).colorScheme;
-  late final TextTheme _textTheme = Theme.of(context).textTheme;
-
-  @override
-  Color? get iconColor => _colors.secondary;
-
-  @override
-  Color? get backgroundColor => _colors.surface;
-
-  @override
-  Color? get shadowColor => Colors.transparent;
-
-  @override
-  Color? get surfaceTintColor => _colors.surfaceTint;
-
-  @override
-  TextStyle? get titleTextStyle => _textTheme.headlineSmall;
-
-  @override
-  TextStyle? get contentTextStyle => _textTheme.bodyMedium;
 }

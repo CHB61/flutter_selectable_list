@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../modals/side_sheet/side_sheet_theme.dart';
 
 enum DropdownAligmnent {
   center,
@@ -149,15 +148,15 @@ class DropdownRoute<T> extends PopupRoute<T> {
         ? 100
         : screenSize.height - yOffset - 15;
 
-    SideSheetTheme defaults = _DropdownDefaultsM3(context);
+    _DropdownDefaultsM3 defaults = _DropdownDefaultsM3(context);
 
     Widget child = Material(
-      elevation: defaults.elevation!,
+      elevation: defaults.elevation,
       clipBehavior: Clip.antiAlias,
       // color: Theme.of(context).colorScheme.surface,
       shadowColor: defaults.shadowColor,
       surfaceTintColor: defaults.surfaceTintColor,
-      shape: defaults.shape!,
+      shape: defaults.shape,
       child: ConstrainedBox(
         constraints: constraints ?? BoxConstraints(maxHeight: maxHeight),
         child: SizeTransition(
@@ -198,34 +197,20 @@ class DropdownRoute<T> extends PopupRoute<T> {
   Duration get transitionDuration => _transitionDuration;
 }
 
-class _DropdownDefaultsM3 extends SideSheetTheme {
-  _DropdownDefaultsM3(this.context)
-      : super(
-          alignment: Alignment.center,
-          elevation: 6.0,
-          shape: const RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(28.0))),
-        );
+class _DropdownDefaultsM3 {
+  _DropdownDefaultsM3(this.context);
 
   final BuildContext context;
   late final ColorScheme _colors = Theme.of(context).colorScheme;
   late final TextTheme _textTheme = Theme.of(context).textTheme;
 
-  @override
-  Color? get iconColor => _colors.secondary;
-
-  @override
+  Alignment get alignment => Alignment.center;
+  double get elevation => 6.0;
+  ShapeBorder get shape => const RoundedRectangleBorder(
+      borderRadius: BorderRadius.all(Radius.circular(28.0)));
   Color? get backgroundColor => _colors.surface;
-
-  @override
   Color? get shadowColor => Theme.of(context).shadowColor;
-
-  @override
   Color? get surfaceTintColor => _colors.surfaceTint;
-
-  @override
   TextStyle? get titleTextStyle => _textTheme.headlineSmall;
-
-  @override
   TextStyle? get contentTextStyle => _textTheme.bodyMedium;
 }
