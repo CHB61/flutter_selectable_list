@@ -1,72 +1,7 @@
 import 'package:flutter/material.dart';
 import 'selectable_list_anchor.dart';
 
-enum ProgressIndicatorPosition {
-  center,
-  listItem,
-}
-
 class SelectableList<T> extends StatefulWidget {
-  final Color? backgroundColor;
-
-  final OutlinedBorder? checkboxShape;
-
-  /// Where to place the control relative to the text on the [CheckboxListTile].
-  final ListTileControlAffinity controlAffinity;
-
-  final double? elevation;
-
-  final List<T>? initialValueList;
-  final T? initialValueSingle;
-
-  final bool isThreeLine;
-
-  /// Overrides the default [CheckboxListTile].
-  final Widget Function(T item, int index)? itemBuilder;
-  final List<T>? items;
-
-  /// Callback function to get the title of each item. Not needed if `T` is of
-  /// type `String`.
-  // final Widget Function(T)? itemTitle;
-  final String Function(T)? itemTitle;
-
-  /// This value is used as a percentage (which ranges from 0.0 to 1.0) of the
-  /// `maxScrollExtent` to determine when to call [onScrollThresholdReached]
-  /// based on the current scroll position. The default value is `0.8`.
-  // final double maxScrollThreshold;
-  final double maxScrollThreshold;
-
-  final bool multiselect;
-
-  final void Function(List<T>, T, bool)? onMultiSelectionChanged;
-  final void Function(T?)? onSingleSelectionChanged;
-
-  /// Widget to be displayed when [SelectableListController.loading] is `true`.
-  /// The position of this widget can be set using the [SelectableListController.progressIndicatorPosition].
-  final Widget? progressIndicator;
-
-  /// An enum that determines where the [progressIndicator] is displayed.
-  ///
-  /// [ProgressIndicatorPosition.center] will render the widget above the list
-  /// items in a [Stack], and [ProgressIndicatorPosition.listItem] will render
-  /// the widget where the next list item would appear.
-  // final ProgressIndicatorPosition progressIndicatorPosition;
-
-  final SingleSelectController<T>? singleSelectController;
-  final MultiSelectController<T>? multiSelectController;
-
-  /// Creates a listener on the [scrollController] that calls this function
-  /// when the [maxScrollThreshold] is reached. It will only be called once
-  /// unless the `maxScrollExtent` changes.
-  final Function? onScrollThresholdReached;
-
-  final ScrollController? scrollController;
-  final Axis scrollDirection;
-  final Widget Function(T)? secondary;
-  final Widget Function(T)? subtitle;
-
-  final Widget Function(TextEditingController, Widget)? searchBuilder;
-
   const SelectableList.single({
     super.key,
     this.backgroundColor,
@@ -114,7 +49,7 @@ class SelectableList<T> extends StatefulWidget {
     this.itemTitle,
     this.maxScrollThreshold = 0.85,
     this.onScrollThresholdReached,
-    void Function(List<T>, T, bool)? onSelectionChanged,
+    OnMultiSelectionChanged onSelectionChanged,
     this.progressIndicator,
     this.scrollController,
     this.scrollDirection = Axis.vertical,
@@ -133,12 +68,72 @@ class SelectableList<T> extends StatefulWidget {
         assert(items != null || controller != null),
         assert(maxScrollThreshold >= 0 && maxScrollThreshold <= 1);
 
+  final Color? backgroundColor;
+
+  final OutlinedBorder? checkboxShape;
+
+  /// Where to place the control relative to the text on the [CheckboxListTile].
+  final ListTileControlAffinity controlAffinity;
+
+  final double? elevation;
+
+  final List<T>? initialValueList;
+  final T? initialValueSingle;
+
+  final bool isThreeLine;
+
+  /// Overrides the default [CheckboxListTile].
+  final Widget Function(T item, int index)? itemBuilder;
+  final List<T>? items;
+
+  /// Callback function to get the title of each item. Not needed if `T` is of
+  /// type `String`.
+  // final Widget Function(T)? itemTitle;
+  final String Function(T)? itemTitle;
+
+  /// This value is used as a percentage (which ranges from 0.0 to 1.0) of the
+  /// `maxScrollExtent` to determine when to call [onScrollThresholdReached]
+  /// based on the current scroll position. The default value is `0.8`.
+  // final double maxScrollThreshold;
+  final double maxScrollThreshold;
+
+  final bool multiselect;
+
+  final OnMultiSelectionChanged onMultiSelectionChanged;
+  final void Function(T?)? onSingleSelectionChanged;
+
+  /// Widget to be displayed when [SelectableListController.loading] is `true`.
+  /// The position of this widget can be set using the [SelectableListController.progressIndicatorPosition].
+  final Widget? progressIndicator;
+
+  /// An enum that determines where the [progressIndicator] is displayed.
+  ///
+  /// [ProgressIndicatorPosition.center] will render the widget above the list
+  /// items in a [Stack], and [ProgressIndicatorPosition.listItem] will render
+  /// the widget where the next list item would appear.
+  // final ProgressIndicatorPosition progressIndicatorPosition;
+
+  final SingleSelectController<T>? singleSelectController;
+  final MultiSelectController<T>? multiSelectController;
+
+  /// Creates a listener on the [scrollController] that calls this function
+  /// when the [maxScrollThreshold] is reached. It will only be called once
+  /// unless the `maxScrollExtent` changes.
+  final Function? onScrollThresholdReached;
+
+  final ScrollController? scrollController;
+  final Axis scrollDirection;
+  final Widget Function(T)? secondary;
+  final Widget Function(T)? subtitle;
+
+  final Widget Function(TextEditingController, Widget)? searchBuilder;
+
   @override
   State<SelectableList<T>> createState() => _SelectableListState<T>();
 }
 
 class _SelectableListState<T> extends State<SelectableList<T>> {
-  late SelectableListController<T> _controller;
+  late SelectableListController _controller;
   late ScrollController _scrollController;
   double _maxScrollExtent = 0;
   bool _calledMaxExtent = false;
@@ -292,7 +287,7 @@ class _SelectableListState<T> extends State<SelectableList<T>> {
 class _SelectableListView<T> extends StatelessWidget {
   final ScrollController scrollController;
   final Axis scrollDirection;
-  final SelectableListController<T> controller;
+  final SelectableListController controller;
   final List items;
   final Widget Function(T item, int index) itemBuilder;
   final Widget Function() buildProgressIndicator;
@@ -345,3 +340,11 @@ class _SelectableListView<T> extends StatelessWidget {
     );
   }
 }
+
+enum ProgressIndicatorPosition {
+  center,
+  listItem,
+}
+
+typedef OnMultiSelectionChanged<T> = void Function(
+    List<T> value, T item, bool selected)?;

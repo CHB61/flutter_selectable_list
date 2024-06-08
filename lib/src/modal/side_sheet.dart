@@ -24,45 +24,6 @@ Future<T?> showModalSideSheet<T>({
   );
 }
 
-class SideSheet extends StatelessWidget {
-  final Widget child;
-  final double? elevation;
-  final EdgeInsetsGeometry? insetPadding;
-  final Color? shadowColor;
-  final ShapeBorder? shape;
-  final Color? surfaceTintColor;
-  final Color? backgroundColor;
-
-  const SideSheet({
-    super.key,
-    this.backgroundColor,
-    required this.child,
-    this.elevation,
-    this.insetPadding,
-    this.shadowColor,
-    this.shape,
-    this.surfaceTintColor,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    _SideSheetDefaultsM3 defaults = _SideSheetDefaultsM3(context);
-
-    return Padding(
-      padding: insetPadding ?? defaults.insetPadding,
-      child: Material(
-        elevation: elevation ?? defaults.elevation,
-        clipBehavior: Clip.hardEdge,
-        color: backgroundColor ?? defaults.backgroundColor,
-        shadowColor: shadowColor ?? defaults.shadowColor,
-        surfaceTintColor: surfaceTintColor ?? defaults.surfaceTintColor,
-        shape: shape ?? defaults.shape,
-        child: child,
-      ),
-    );
-  }
-}
-
 class SideSheetRoute<T> extends PopupRoute<T> {
   SideSheetRoute({
     required WidgetBuilder builder,
@@ -144,7 +105,7 @@ class SideSheetRoute<T> extends PopupRoute<T> {
         child: child,
       );
     }
-    return _transitionBuilder(context, animation, secondaryAnimation, child);
+    return _transitionBuilder!(context, animation, secondaryAnimation, child);
   }
 
   @override
@@ -158,21 +119,4 @@ class SideSheetRoute<T> extends PopupRoute<T> {
 
   @override
   Duration get transitionDuration => _transitionDuration;
-}
-
-class _SideSheetDefaultsM3 {
-  _SideSheetDefaultsM3(this.context);
-
-  final BuildContext context;
-  late final ColorScheme _colors = Theme.of(context).colorScheme;
-
-  Alignment get alignment => Alignment.center;
-  double get elevation => 6.0;
-  EdgeInsetsGeometry get insetPadding => const EdgeInsets.all(8);
-  ShapeBorder get shape => const RoundedRectangleBorder(
-        borderRadius: BorderRadius.all(Radius.circular(28.0)),
-      );
-  Color? get backgroundColor => _colors.surface;
-  Color? get shadowColor => Colors.transparent;
-  Color? get surfaceTintColor => _colors.surfaceTint;
 }

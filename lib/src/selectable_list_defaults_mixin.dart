@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_selectable_list/src/selectable_list_anchor.dart';
+import 'selectable_list_anchor.dart';
 
 mixin ModalDefaultsMixin<T> {
   Widget getDefaultModalHeader({
@@ -20,13 +20,17 @@ mixin ModalDefaultsMixin<T> {
 
   Widget getDefaultModalActions({
     required SelectableListController<T> controller,
-    required List<dynamic> originalValue,
-    required void Function() onConfirm,
+    required bool multiselect,
+    required List<T> originalValue,
+    void Function(List<T>)? onConfirmMulti,
+    void Function(T?)? onConfirmSingle,
   }) {
-    return _DefaultActions(
+    return _DefaultActions<T>(
       controller: controller,
+      multiselect: multiselect,
       originalValue: originalValue,
-      onConfirm: onConfirm,
+      onConfirmMulti: onConfirmMulti,
+      onConfirmSingle: onConfirmSingle,
     );
   }
 }
@@ -126,15 +130,19 @@ class __DefaultHeaderState<T> extends State<_DefaultHeader<T>> {
 }
 
 class _DefaultActions<T> extends StatelessWidget {
-  final SelectableListController controller;
+  final SelectableListController<T> controller;
   final List<T> originalValue;
-  final void Function() onConfirm;
+  final void Function(List<T>)? onConfirmMulti;
+  final void Function(T?)? onConfirmSingle;
+  final bool multiselect;
 
   const _DefaultActions({
     super.key,
     required this.controller,
+    required this.multiselect,
     required this.originalValue,
-    required this.onConfirm,
+    required this.onConfirmMulti,
+    required this.onConfirmSingle,
   });
 
   @override
@@ -160,7 +168,16 @@ class _DefaultActions<T> extends StatelessWidget {
             // child: cancelText ?? const Text("CANCEL"),
           ),
           TextButton(
-            onPressed: onConfirm,
+            onPressed: () {
+              if (!multiselect && controller.value == null) {
+                Navigator.pop(context, []);
+              } else {
+                Navigator.pop(context, controller.value);
+              }
+              multiselect
+                  ? onConfirmMulti?.call(controller.value)
+                  : onConfirmSingle?.call(controller.value);
+            },
             child: const Text('OK'),
             // child: confirmText ?? const Text("OK"),
           )

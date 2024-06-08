@@ -9,7 +9,7 @@ import 'selectable_list_defaults_mixin.dart';
 /// tree, an implicitly created [SelectableListController] will not be useful as its state
 /// will be lost. Therefore, it is required to provide a controller so that the state of
 /// items and selected values can be maintained externally.
-class ListSelectDialog<T> extends StatefulWidget {
+class SelectableListDialog<T> extends StatefulWidget {
   final Widget? actions;
 
   /// Sets the backgroundColor of the [Dialog] and the tileColor of [CheckboxListTile].
@@ -51,12 +51,12 @@ class ListSelectDialog<T> extends StatefulWidget {
   final bool multiselect;
 
   /// Called when confirm is tapped.
-  final void Function(T)? onConfirmSingle;
+  final void Function(T?)? onConfirmSingle;
   final void Function(List<T>)? onConfirmMulti;
 
   final void Function(String)? onSearchTextChanged;
   final void Function(T?)? onSingleSelectionChanged;
-  final void Function(List<T>, T, bool)? onMultiSelectionChanged;
+  final OnMultiSelectionChanged onMultiSelectionChanged;
 
   /// Widget to be displayed when [SelectableListController.loading] is `true`.
   /// The position of this widget can be set using the [SelectableListController.progressIndicatorPosition].
@@ -77,7 +77,7 @@ class ListSelectDialog<T> extends StatefulWidget {
 
   final double? width;
 
-  const ListSelectDialog.single({
+  const SelectableListDialog.single({
     super.key,
     this.actions,
     this.backgroundColor,
@@ -90,7 +90,7 @@ class ListSelectDialog<T> extends StatefulWidget {
     this.isThreeLine = false,
     this.itemBuilder,
     this.itemTitle,
-    void Function(T)? onConfirm,
+    void Function(T?)? onConfirm,
     this.onMaxScrollExtent,
     this.onSearchTextChanged,
     void Function(T?)? onSelectionChanged,
@@ -109,7 +109,7 @@ class ListSelectDialog<T> extends StatefulWidget {
         onSingleSelectionChanged = onSelectionChanged,
         singleSelectController = controller;
 
-  const ListSelectDialog.multi({
+  const SelectableListDialog.multi({
     super.key,
     this.actions,
     this.backgroundColor,
@@ -125,7 +125,7 @@ class ListSelectDialog<T> extends StatefulWidget {
     void Function(List<T>)? onConfirm,
     this.onMaxScrollExtent,
     this.onSearchTextChanged,
-    void Function(List<T>, T, bool)? onSelectionChanged,
+    OnMultiSelectionChanged onSelectionChanged,
     this.progressIndicator,
     this.searchable = false,
     this.searchBuilder,
@@ -142,10 +142,11 @@ class ListSelectDialog<T> extends StatefulWidget {
         multiSelectController = controller;
 
   @override
-  State<ListSelectDialog<T>> createState() => _ListSelectDialogState<T>();
+  State<SelectableListDialog<T>> createState() =>
+      _SelectableListDialogState<T>();
 }
 
-class _ListSelectDialogState<T> extends State<ListSelectDialog<T>>
+class _SelectableListDialogState<T> extends State<SelectableListDialog<T>>
     with ModalDefaultsMixin<T> {
   // Stores the controller value when opened (initState is invoked).
   // Used to pop with the initial value when cancel is tapped.
@@ -245,13 +246,10 @@ class _ListSelectDialogState<T> extends State<ListSelectDialog<T>>
               widget.actions ??
                   getDefaultModalActions(
                     controller: _controller,
+                    multiselect: widget.multiselect,
                     originalValue: originalValue,
-                    onConfirm: () {
-                      Navigator.pop(context, _controller.value);
-                      widget.multiselect
-                          ? widget.onConfirmMulti?.call(_controller.value)
-                          : widget.onConfirmSingle?.call(_controller.value);
-                    },
+                    onConfirmMulti: widget.onConfirmMulti,
+                    onConfirmSingle: widget.onConfirmSingle,
                   ),
             ],
           ),

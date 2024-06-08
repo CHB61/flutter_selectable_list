@@ -3,7 +3,7 @@ import 'selectable_list.dart';
 import 'selectable_list_anchor.dart';
 import 'selectable_list_defaults_mixin.dart';
 
-class ListSelectBottomSheet<T> extends StatefulWidget {
+class SelectableListBottomSheet<T> extends StatefulWidget {
   final Widget? actions;
 
   /// Sets the background color of the [DraggableScrollableSheet] and the tileColor of [CheckboxListTile].
@@ -48,10 +48,10 @@ class ListSelectBottomSheet<T> extends StatefulWidget {
   final SingleSelectController<T>? singleSelectController;
   final MultiSelectController<T>? multiSelectController;
 
-  final void Function(T)? onConfirmSingle;
+  final void Function(T?)? onConfirmSingle;
   final void Function(List<T>)? onConfirmMulti;
 
-  final void Function(List<T>, T, bool)? onMultiSelectionChanged;
+  final OnMultiSelectionChanged onMultiSelectionChanged;
   final void Function(String)? onSearchTextChanged;
   final void Function(T?)? onSingleSelectionChanged;
 
@@ -64,7 +64,7 @@ class ListSelectBottomSheet<T> extends StatefulWidget {
 
   final ShapeBorder? shape;
 
-  const ListSelectBottomSheet.single({
+  const SelectableListBottomSheet.single({
     super.key,
     this.actions,
     this.backgroundColor,
@@ -78,7 +78,7 @@ class ListSelectBottomSheet<T> extends StatefulWidget {
     this.itemTitle,
     this.maxChildSize = 1.0,
     this.minChildSize = 0.25,
-    void Function(T)? onConfirm,
+    void Function(T?)? onConfirm,
     this.onSearchTextChanged,
     void Function(T?)? onSelectionChanged,
     this.searchable = false,
@@ -94,7 +94,7 @@ class ListSelectBottomSheet<T> extends StatefulWidget {
         onSingleSelectionChanged = onSelectionChanged,
         singleSelectController = controller;
 
-  const ListSelectBottomSheet.multi({
+  const SelectableListBottomSheet.multi({
     super.key,
     this.actions,
     this.backgroundColor,
@@ -110,7 +110,7 @@ class ListSelectBottomSheet<T> extends StatefulWidget {
     this.dividerColor,
     void Function(List<T>)? onConfirm,
     this.onSearchTextChanged,
-    void Function(List<T>, T, bool)? onSelectionChanged,
+    OnMultiSelectionChanged onSelectionChanged,
     this.searchable = false,
     this.searchBuilder,
     this.secondary,
@@ -125,12 +125,12 @@ class ListSelectBottomSheet<T> extends StatefulWidget {
         singleSelectController = null;
 
   @override
-  State<ListSelectBottomSheet<T>> createState() =>
-      _ListSelectBottomSheetState<T>();
+  State<SelectableListBottomSheet<T>> createState() =>
+      _SelectableListBottomSheetState<T>();
 }
 
-class _ListSelectBottomSheetState<T> extends State<ListSelectBottomSheet<T>>
-    with ModalDefaultsMixin<T> {
+class _SelectableListBottomSheetState<T>
+    extends State<SelectableListBottomSheet<T>> with ModalDefaultsMixin<T> {
   // Stores the controller value when the dialog is opened (initState is invoked).
   // Used to pop with the initial value when cancel is tapped.
   List<T> originalValue = [];
@@ -217,13 +217,10 @@ class _ListSelectBottomSheetState<T> extends State<ListSelectBottomSheet<T>>
                 widget.actions ??
                     getDefaultModalActions(
                       controller: _controller,
+                      multiselect: widget.multiselect,
                       originalValue: originalValue,
-                      onConfirm: () {
-                        Navigator.pop(context, _controller.value);
-                        widget.multiselect
-                            ? widget.onConfirmMulti?.call(_controller.value)
-                            : widget.onConfirmSingle?.call(_controller.value);
-                      },
+                      onConfirmMulti: widget.onConfirmMulti,
+                      onConfirmSingle: widget.onConfirmSingle,
                     ),
               ],
             ),

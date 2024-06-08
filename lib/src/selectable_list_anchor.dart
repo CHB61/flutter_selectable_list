@@ -38,13 +38,15 @@ class SelectableListAnchor<T> extends StatefulWidget {
       multiSelectBuilder;
   final MultiSelectController<T>? multiSelectController;
 
-  final void Function(T)? onConfirmSingle;
+  final Function? onBarrierDismissed;
+
+  final void Function(T?)? onConfirmSingle;
   final void Function(List<T>)? onConfirmMulti;
 
   /// Callback for when scroll extent is reached.
   final Function? onMaxScrollExtent;
 
-  final void Function(List<T>, T, bool)? onMultiSelectionChanged;
+  final OnMultiSelectionChanged onMultiSelectionChanged;
 
   final void Function(String)? onSearchTextChanged;
 
@@ -57,6 +59,8 @@ class SelectableListAnchor<T> extends StatefulWidget {
   /// Widget to be displayed when [SelectableListController.loading] is `true`.
   /// The position of this widget can be set using the [SelectableListController.progressIndicatorPosition].
   final Widget? progressIndicator;
+
+  final bool resetOnBarrierDismissed;
 
   /// Enables the default search functionality. Has no effect when [header] is provided.
   final bool searchable;
@@ -111,11 +115,13 @@ class SelectableListAnchor<T> extends StatefulWidget {
     this.itemBuilder,
     this.items,
     this.itemTitle,
-    void Function(T)? onConfirm,
+    this.onBarrierDismissed,
+    void Function(T?)? onConfirm,
     this.onMaxScrollExtent,
     this.onSearchTextChanged,
     void Function(T?)? onSelectionChanged,
     this.progressIndicator,
+    this.resetOnBarrierDismissed = true,
     this.searchable = false,
     this.searchBuilder,
     this.secondary,
@@ -162,11 +168,13 @@ class SelectableListAnchor<T> extends StatefulWidget {
     this.itemBuilder,
     this.items,
     this.itemTitle,
+    this.onBarrierDismissed,
     void Function(List<T>)? onConfirm,
     this.onMaxScrollExtent,
     this.onSearchTextChanged,
-    void Function(List<T>, T, bool)? onSelectionChanged,
+    OnMultiSelectionChanged onSelectionChanged,
     this.progressIndicator,
+    this.resetOnBarrierDismissed = true,
     this.searchable = false,
     this.searchBuilder,
     this.secondary,
@@ -215,8 +223,19 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
     _controller._anchor = this;
   }
 
+  // Called when the barrier is dismissed to reset the controller.value.
+  // Dropdown is an exception since it doesn't have default `actions`, therefore
+  // tapping the barrier is not considered a 'cancel' action.
+  void _resetValue(List<T> originalValue) {
+    if (_controller is MultiSelectController) {
+      (_controller as MultiSelectController<T>).value = originalValue;
+    } else {
+      (_controller as SingleSelectController<T>).value =
+          originalValue.isNotEmpty ? originalValue.first : null;
+    }
+  }
+
   void _openBottomSheet() {
-    // could duplicate the variable
     List<T> originalValue = widget.multiselect
         ? [..._controller.value]
         : _controller.value != null
@@ -224,49 +243,43 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
             : [];
 
     showModalBottomSheet(
-        // backgroundColor: widget.backgroundColor,
-        barrierColor: widget.barrierColor,
-        barrierLabel: widget.barrierLabel,
-        isDismissible: widget.barrierDismissable,
-        showDragHandle: widget.bottomSheetProperties.showDragHandle,
-        // shape: widget.shape,
-        isScrollControlled: true,
-        context: context,
-        builder: (context) {
-          return widget.multiselect
-              ? ListSelectBottomSheet.multi(
-                  // backgroundColor: widget.backgroundColor,
-                  controller: _controller as MultiSelectController<T>,
-                  // elevation: widget.elevation,
-                  initialChildSize:
-                      widget.bottomSheetProperties.initialChildSize,
-                  itemTitle: widget.itemTitle,
-                  maxChildSize: widget.bottomSheetProperties.maxChildSize,
-                  minChildSize: widget.bottomSheetProperties.minChildSize,
-                  // shape: widget.shape,
-                )
-              : ListSelectBottomSheet.single(
-                  // backgroundColor: widget.backgroundColor,
-                  controller: _controller as SingleSelectController<T>,
-                  // elevation: widget.elevation,
-                  itemTitle: widget.itemTitle,
-                );
-        }).then(
-      (value) {
-        if (value == null) {
-          if (_controller is MultiSelectController) {
-            (_controller as MultiSelectController<T>).value = originalValue;
-          } else {
-            (_controller as SingleSelectController<T>).value =
-                originalValue.isNotEmpty ? originalValue.first : null;
-          }
-        }
+      // backgroundColor: widget.backgroundColor,
+      barrierColor: widget.barrierColor,
+      barrierLabel: widget.barrierLabel,
+      isDismissible: widget.barrierDismissable,
+      showDragHandle: widget.bottomSheetProperties.showDragHandle,
+      // shape: widget.shape,
+      isScrollControlled: true,
+      context: context,
+      builder: (context) {
+        return widget.multiselect
+            ? SelectableListBottomSheet.multi(
+                // backgroundColor: widget.backgroundColor,
+                controller: _controller as MultiSelectController<T>,
+                // elevation: widget.elevation,
+                initialChildSize: widget.bottomSheetProperties.initialChildSize,
+                itemTitle: widget.itemTitle,
+                maxChildSize: widget.bottomSheetProperties.maxChildSize,
+                minChildSize: widget.bottomSheetProperties.minChildSize,
+                // shape: widget.shape,
+              )
+            : SelectableListBottomSheet.single(
+                // backgroundColor: widget.backgroundColor,
+                controller: _controller as SingleSelectController<T>,
+                // elevation: widget.elevation,
+                itemTitle: widget.itemTitle,
+              );
       },
-    );
+    ).then((value) {
+      // Handle barrier tap - will pop with null value.
+      // Default confirm and cancel buttons always pop with a value.
+      if (value == null) {
+        widget.onBarrierDismissed?.call() ?? _resetValue(originalValue);
+      }
+    });
   }
 
   void _openDialog() {
-    // could duplicate the variable
     List<T> originalValue = widget.multiselect
         ? [..._controller.value]
         : _controller.value != null
@@ -291,7 +304,7 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
           },
       pageBuilder: (ctx, animation, _) {
         return widget.multiselect
-            ? ListSelectDialog<T>.multi(
+            ? SelectableListDialog<T>.multi(
                 actions: widget.actions,
                 backgroundColor: widget.backgroundColor,
                 controller: _controller as MultiSelectController<T>,
@@ -319,7 +332,7 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
                 shape: widget.shape,
                 subtitle: widget.subtitle,
               )
-            : ListSelectDialog<T>.single(
+            : SelectableListDialog<T>.single(
                 actions: widget.actions,
                 backgroundColor: widget.backgroundColor,
                 controller: _controller as SingleSelectController<T>,
@@ -348,28 +361,16 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
                 subtitle: widget.subtitle,
               );
       },
-    ).then((result) {
-      // If the barrier is dismissed, the controller.value needs
-      // to be set back to the original.
-      if (result == null) {
-        if (_controller is MultiSelectController) {
-          (_controller as MultiSelectController<T>).value = originalValue;
-        } else {
-          (_controller as SingleSelectController<T>).value =
-              originalValue.isNotEmpty ? originalValue.first : null;
-        }
+    ).then((value) {
+      // Handle barrier tap - will pop with null value.
+      // Default confirm and cancel buttons always pop with a value.
+      if (value == null) {
+        widget.onBarrierDismissed?.call() ?? _resetValue(originalValue);
       }
     });
   }
 
   void _openDropdown() {
-    // could duplicate the variable
-    List<T> originalValue = widget.multiselect
-        ? [..._controller.value]
-        : _controller.value != null
-            ? [_controller.value]
-            : [];
-
     showModalDropdown(
       alignment: widget.dropdownProperties.alignment,
       anchorKey: widget.dropdownProperties.anchor ? _anchorKey : null,
@@ -383,31 +384,25 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
       width: widget.dropdownProperties.width,
       builder: (ctx) {
         return widget.multiselect
-            ? ListSelectDropdown.multi(
+            ? SelectableListDropdown.multi(
                 controller: _controller as MultiSelectController<T>,
                 itemTitle: widget.itemTitle,
               )
-            : ListSelectDropdown.single(
+            : SelectableListDropdown.single(
                 controller: _controller as SingleSelectController<T>,
                 itemTitle: widget.itemTitle,
               );
       },
-    ).then(
-      (value) {
-        if (value == null) {
-          if (_controller is MultiSelectController) {
-            (_controller as MultiSelectController<T>).value = originalValue;
-          } else {
-            (_controller as SingleSelectController<T>).value =
-                originalValue.isNotEmpty ? originalValue.first : null;
-          }
-        }
-      },
-    );
+    ).then((value) {
+      // Handle barrier tap - will pop with null value.
+      // Default confirm and cancel buttons always pop with a value.
+      if (value == null) {
+        widget.onBarrierDismissed?.call();
+      }
+    });
   }
 
   void _openSideSheet() {
-    // could duplicate the variable
     List<T> originalValue = widget.multiselect
         ? [..._controller.value]
         : _controller.value != null
@@ -415,84 +410,83 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
             : [];
 
     showModalSideSheet(
-        axisAlignment: widget.sideSheetProperties.axisAlignment,
-        barrierColor: widget.barrierColor,
-        barrierDismissible: widget.barrierDismissable,
-        barrierLabel: widget.barrierLabel,
-        context: context,
-        direction: widget.sideSheetProperties.direction,
-        transitionBuilder: widget.sideSheetProperties.transitionBuilder,
-        width: widget.sideSheetProperties.width,
-        builder: (ctx) {
-          return widget.multiselect
-              ? ListSelectSideSheet.multi(
-                  backgroundColor: widget.backgroundColor,
-                  actions: widget.actions,
-                  controller: _controller as MultiSelectController<T>,
-                  dividerColor: widget.dividerColor,
-                  elevation: widget.elevation,
-                  header: widget.header,
-                  headerTitle: widget.headerTitle,
-                  isThreeLine: widget.isThreeLine,
-                  itemBuilder: widget.itemBuilder,
-                  itemTitle: widget.itemTitle,
-                  onConfirm: (values) {
-                    _state?.didChange(values);
-                    widget.onConfirmMulti?.call(values);
-                  },
-                  onMaxScrollExtent: widget.onMaxScrollExtent,
-                  onSearchTextChanged: widget.onSearchTextChanged,
-                  onSelectionChanged: (values, item, checked) {
-                    _state?.didChange(values);
-                    widget.onMultiSelectionChanged?.call(values, item, checked);
-                  },
-                  progressIndicator: widget.progressIndicator,
-                  searchable: widget.searchable,
-                  searchBuilder: widget.searchBuilder,
-                  secondary: widget.secondary,
-                  subtitle: widget.subtitle,
-                  shape: widget.shape,
-                )
-              : ListSelectSideSheet.single(
-                  backgroundColor: widget.backgroundColor,
-                  actions: widget.actions,
-                  controller: _controller as SingleSelectController<T>,
-                  dividerColor: widget.dividerColor,
-                  elevation: widget.elevation,
-                  header: widget.header,
-                  headerTitle: widget.headerTitle,
-                  isThreeLine: widget.isThreeLine,
-                  itemBuilder: widget.itemBuilder,
-                  itemTitle: widget.itemTitle,
-                  onConfirm: (value) {
-                    _state?.didChange(value);
-                    widget.onConfirmSingle?.call(value);
-                  },
-                  onMaxScrollExtent: widget.onMaxScrollExtent,
-                  onSearchTextChanged: widget.onSearchTextChanged,
-                  onSelectionChanged: (value) {
-                    _state?.didChange(value);
-                    widget.onSingleSelectionChanged?.call(value);
-                  },
-                  progressIndicator: widget.progressIndicator,
-                  searchable: widget.searchable,
-                  searchBuilder: widget.searchBuilder,
-                  secondary: widget.secondary,
-                  subtitle: widget.subtitle,
-                  shape: widget.shape,
-                );
-        }).then(
-      (value) {
-        if (value == null) {
-          if (_controller is MultiSelectController) {
-            (_controller as MultiSelectController<T>).value = originalValue;
-          } else {
-            (_controller as SingleSelectController<T>).value =
-                originalValue.isNotEmpty ? originalValue.first : null;
-          }
-        }
+      axisAlignment: widget.sideSheetProperties.axisAlignment,
+      barrierColor: widget.barrierColor,
+      barrierDismissible: widget.barrierDismissable,
+      barrierLabel: widget.barrierLabel,
+      context: context,
+      direction: widget.sideSheetProperties.direction,
+      transitionBuilder: widget.sideSheetProperties.transitionBuilder,
+      width: widget.sideSheetProperties.width,
+      builder: (ctx) {
+        return widget.multiselect
+            ? SelectableListSideSheet.multi(
+                backgroundColor: widget.backgroundColor,
+                actions: widget.actions,
+                controller: _controller as MultiSelectController<T>,
+                dividerColor: widget.dividerColor,
+                elevation: widget.elevation,
+                header: widget.header,
+                headerTitle: widget.headerTitle,
+                isThreeLine: widget.isThreeLine,
+                itemBuilder: widget.itemBuilder,
+                itemTitle: widget.itemTitle,
+                onConfirm: (values) {
+                  _state?.didChange(values);
+                  widget.onConfirmMulti?.call(values);
+                },
+                onMaxScrollExtent: widget.onMaxScrollExtent,
+                onSearchTextChanged: widget.onSearchTextChanged,
+                onSelectionChanged: (values, item, checked) {
+                  _state?.didChange(values);
+                  widget.onMultiSelectionChanged?.call(values, item, checked);
+                },
+                progressIndicator: widget.progressIndicator,
+                searchable: widget.searchable,
+                searchBuilder: widget.searchBuilder,
+                secondary: widget.secondary,
+                subtitle: widget.subtitle,
+                shape: widget.shape,
+              )
+            : SelectableListSideSheet.single(
+                backgroundColor: widget.backgroundColor,
+                actions: widget.actions,
+                controller: _controller as SingleSelectController<T>,
+                dividerColor: widget.dividerColor,
+                elevation: widget.elevation,
+                header: widget.header,
+                headerTitle: widget.headerTitle,
+                isThreeLine: widget.isThreeLine,
+                itemBuilder: widget.itemBuilder,
+                itemTitle: widget.itemTitle,
+                onConfirm: (value) {
+                  _state?.didChange(value);
+                  widget.onConfirmSingle?.call(value);
+                },
+                onMaxScrollExtent: widget.onMaxScrollExtent,
+                onSearchTextChanged: widget.onSearchTextChanged,
+                onSelectionChanged: (value) {
+                  _state?.didChange(value);
+                  widget.onSingleSelectionChanged?.call(value);
+                },
+                progressIndicator: widget.progressIndicator,
+                searchable: widget.searchable,
+                searchBuilder: widget.searchBuilder,
+                secondary: widget.secondary,
+                subtitle: widget.subtitle,
+                shape: widget.shape,
+              );
       },
-    );
+    ).then((value) {
+      // Handle barrier tap - will pop with null value.
+      // Default confirm and cancel buttons always pop with a value.
+      if (value == null) {
+        if (widget.resetOnBarrierDismissed) {
+          _resetValue(originalValue);
+        }
+        widget.onBarrierDismissed?.call();
+      }
+    });
   }
 
   @override
@@ -550,10 +544,6 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
 }
 
 /// A [ChangeNotifier] that maintains the state of the SelectableList.
-///
-/// Type parameter `T` represents the type of the *items*, and type
-/// parameter `V` represents the type of the *value* which is `List<T>` for
-/// `MultiSelectController` and `T?` for `SingleSelectController`.
 abstract class SelectableListController<T> extends ChangeNotifier {
   _SelectableListAnchorState? _anchor;
   List<T> _items;
@@ -574,11 +564,11 @@ abstract class SelectableListController<T> extends ChangeNotifier {
         _searchController = searchController ?? TextEditingController();
 
   List<T> get items => [..._items];
-  TextEditingController get searchController => _searchController;
   List<T>? get filteredItems =>
       _filteredItems != null ? [..._filteredItems!] : null;
   bool get loading => _loading;
   bool get searchActive => _searchActive;
+  TextEditingController get searchController => _searchController;
 
   void openDialog() {
     _anchor?._openDialog();
@@ -623,8 +613,6 @@ abstract class SelectableListController<T> extends ChangeNotifier {
 
   dynamic get value;
   set value(dynamic newValue);
-  // V get value;
-  // set value(V newValue);
   void onValueChanged(T item, [bool checked = true]);
   bool isItemChecked(T item);
 }
