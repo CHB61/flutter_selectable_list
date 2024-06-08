@@ -64,6 +64,6 @@ SelectableListAnchor.multi(
 ```
 
 ## Contributing
-Pull requests are welcome. If you are interested in becoming a ${\color{lightgreen}collaborator}$, please send an email.
+Pull requests are welcome. If you are interested in becoming a collaborator, please send an email.
 
 
