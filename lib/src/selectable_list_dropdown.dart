@@ -15,7 +15,8 @@ class SelectableListDropdown<T> extends StatefulWidget {
   /// not be visible on the default list items, making them appear lighter.
   final Color? backgroundColor;
 
-  /// Overrides [headerTitle].
+  /// Overrides the default header and any properties used by it such as
+  /// [headerTitle].
   final Widget? header;
 
   /// The title of the Dialog.
@@ -43,6 +44,8 @@ class SelectableListDropdown<T> extends StatefulWidget {
   // final Widget Function(T)? itemTitle;
   final String Function(T)? itemTitle;
 
+  final bool isThreeLine;
+
   final bool multiselect;
 
   final void Function(String)? onSearchTextChanged;
@@ -58,12 +61,18 @@ class SelectableListDropdown<T> extends StatefulWidget {
   /// The position of this widget can be set using the [SelectableListController.progressIndicatorPosition].
   final Widget? progressIndicator;
 
-  /// Enables the default search functionality. Has no effect when [dialogHeader] is provided.
+  /// Enables the search functionality for the default header.
+  /// Display the default header by setting [showDefaultHeader] to `true`.
+  /// Has no effect when [header] is provided.
   final bool searchable;
-  final Widget Function(TextEditingController, Widget)? searchBuilder;
+
+  final Widget Function(TextEditingController, Widget)? searchViewBuilder;
+
   final Widget Function(T)? secondary;
+
+  final bool showDefaultHeader;
+
   final Widget Function(T)? subtitle;
-  final bool isThreeLine;
 
   final Function? onMaxScrollExtent;
 
@@ -85,8 +94,9 @@ class SelectableListDropdown<T> extends StatefulWidget {
     this.padding,
     this.progressIndicator,
     this.searchable = false,
-    this.searchBuilder,
+    this.searchViewBuilder,
     this.secondary,
+    this.showDefaultHeader = false,
     this.subtitle,
   })  : multiselect = false,
         multiSelectController = null,
@@ -112,13 +122,14 @@ class SelectableListDropdown<T> extends StatefulWidget {
     this.padding,
     this.progressIndicator,
     this.searchable = false,
-    this.searchBuilder,
+    this.searchViewBuilder,
     this.secondary,
+    this.showDefaultHeader = false,
     this.subtitle,
   })  : multiselect = true,
         singleSelectController = null,
-        onSingleSelectionChanged = null,
         onMultiSelectionChanged = onSelectionChanged,
+        onSingleSelectionChanged = null,
         multiSelectController = controller;
 
   @override
@@ -128,10 +139,6 @@ class SelectableListDropdown<T> extends StatefulWidget {
 
 class _SelectableListDropdownState<T> extends State<SelectableListDropdown<T>>
     with ModalDefaultsMixin<T> {
-  // Stores the controller value when opened (initState is invoked).
-  // Used to pop with the initial value when cancel is tapped.
-  List<T> originalValue = [];
-
   late SelectableListController<T> _controller;
 
   @override
@@ -141,10 +148,6 @@ class _SelectableListDropdownState<T> extends State<SelectableListDropdown<T>>
     widget.multiselect
         ? _controller = widget.multiSelectController!
         : _controller = widget.singleSelectController!;
-
-    widget.multiselect
-        ? originalValue = [..._controller.value]
-        : originalValue = _controller.value != null ? [_controller.value] : [];
   }
 
   @override
@@ -153,8 +156,18 @@ class _SelectableListDropdownState<T> extends State<SelectableListDropdown<T>>
       padding: widget.padding ?? EdgeInsets.zero,
       child: Column(
         children: [
-          widget.header ?? Container(),
-          if (widget.header != null)
+          widget.header ??
+              (widget.showDefaultHeader
+                  ? getDefaultModalHeader(
+                      controller: _controller,
+                      headerTitle: widget.headerTitle,
+                      searchable: widget.searchable,
+                      onSearchTextChanged: widget.onSearchTextChanged,
+                      itemTitle: widget.itemTitle,
+                      padding: const EdgeInsets.fromLTRB(12, 4, 8, 0),
+                    )
+                  : Container()),
+          if (widget.showDefaultHeader || widget.header != null)
             Divider(
               height: 1,
               color: widget.dividerColor,
@@ -173,7 +186,7 @@ class _SelectableListDropdownState<T> extends State<SelectableListDropdown<T>>
                     secondary: widget.secondary,
                     subtitle: widget.subtitle,
                     onScrollThresholdReached: widget.onMaxScrollExtent,
-                    searchBuilder: widget.searchBuilder,
+                    searchViewBuilder: widget.searchViewBuilder,
                   )
                 : SelectableList.single(
                     backgroundColor: widget.backgroundColor,
@@ -187,10 +200,10 @@ class _SelectableListDropdownState<T> extends State<SelectableListDropdown<T>>
                     secondary: widget.secondary,
                     subtitle: widget.subtitle,
                     onScrollThresholdReached: widget.onMaxScrollExtent,
-                    searchBuilder: widget.searchBuilder,
+                    searchViewBuilder: widget.searchViewBuilder,
                   ),
           ),
-          if (widget.header != null)
+          if (widget.actions != null)
             Divider(
               height: 1,
               color: widget.dividerColor,

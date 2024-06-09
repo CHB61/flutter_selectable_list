@@ -65,7 +65,7 @@ class SelectableListAnchor<T> extends StatefulWidget {
   /// Enables the default search functionality. Has no effect when [header] is provided.
   final bool searchable;
 
-  final Widget Function(TextEditingController, Widget)? searchBuilder;
+  final Widget Function(TextEditingController, Widget)? searchViewBuilder;
 
   final Widget Function(T)? secondary;
 
@@ -89,6 +89,8 @@ class SelectableListAnchor<T> extends StatefulWidget {
   final BottomSheetProperties bottomSheetProperties;
   final DropdownProperties dropdownProperties;
   final DialogProperties dialogProperties;
+
+  final EdgeInsetsGeometry? viewPadding;
 
   const SelectableListAnchor.single({
     super.key,
@@ -123,12 +125,13 @@ class SelectableListAnchor<T> extends StatefulWidget {
     this.progressIndicator,
     this.resetOnBarrierDismissed = true,
     this.searchable = false,
-    this.searchBuilder,
+    this.searchViewBuilder,
     this.secondary,
     this.shape,
     this.sideSheetProperties = const SideSheetProperties(),
     this.subtitle,
     FormFieldValidator<T>? validator,
+    this.viewPadding,
   })  : multiselect = false,
         multiSelectController = null,
         multiSelectBuilder = null,
@@ -176,11 +179,12 @@ class SelectableListAnchor<T> extends StatefulWidget {
     this.progressIndicator,
     this.resetOnBarrierDismissed = true,
     this.searchable = false,
-    this.searchBuilder,
+    this.searchViewBuilder,
     this.secondary,
     this.shape,
     this.sideSheetProperties = const SideSheetProperties(),
     this.subtitle,
+    this.viewPadding,
     FormFieldValidator<List<T>>? validator,
   })  : multiselect = true,
         multiSelectBuilder = builder,
@@ -325,8 +329,9 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
                   _state?.didChange(values);
                   widget.onMultiSelectionChanged?.call(values, item, checked);
                 },
+                padding: widget.viewPadding,
                 progressIndicator: widget.progressIndicator,
-                searchBuilder: widget.searchBuilder,
+                searchViewBuilder: widget.searchViewBuilder,
                 searchable: widget.searchable,
                 secondary: widget.secondary,
                 shape: widget.shape,
@@ -353,8 +358,9 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
                   _state?.didChange(value);
                   widget.onSingleSelectionChanged?.call(value);
                 },
+                padding: widget.viewPadding,
                 progressIndicator: widget.progressIndicator,
-                searchBuilder: widget.searchBuilder,
+                searchViewBuilder: widget.searchViewBuilder,
                 searchable: widget.searchable,
                 secondary: widget.secondary,
                 shape: widget.shape,
@@ -374,23 +380,60 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
     showModalDropdown(
       alignment: widget.dropdownProperties.alignment,
       anchorKey: widget.dropdownProperties.anchor ? _anchorKey : null,
+      backgroundColor: widget.backgroundColor,
       barrierColor: widget.barrierColor,
       barrierDismissible: widget.barrierDismissable,
       barrierLabel: widget.barrierLabel,
       context: context,
       constraints: widget.dropdownProperties.constraints,
+      elevation: widget.elevation,
       offset: widget.dropdownProperties.offset,
-      // transitionDuration: ,
       width: widget.dropdownProperties.width,
       builder: (ctx) {
         return widget.multiselect
             ? SelectableListDropdown.multi(
+                actions: widget.actions,
+                backgroundColor: widget.backgroundColor,
                 controller: _controller as MultiSelectController<T>,
+                dividerColor: widget.dividerColor,
+                elevation: widget.elevation,
+                header: widget.header,
+                headerTitle: widget.headerTitle,
                 itemTitle: widget.itemTitle,
+                isThreeLine: widget.isThreeLine,
+                itemBuilder: widget.itemBuilder,
+                onMaxScrollExtent: widget.onMaxScrollExtent,
+                onSearchTextChanged: widget.onSearchTextChanged,
+                onSelectionChanged: widget.onMultiSelectionChanged,
+                padding: widget.viewPadding,
+                progressIndicator: widget.progressIndicator,
+                searchable: widget.searchable,
+                searchViewBuilder: widget.searchViewBuilder,
+                secondary: widget.secondary,
+                subtitle: widget.subtitle,
+                showDefaultHeader: widget.dropdownProperties.showDefaultHeader,
               )
             : SelectableListDropdown.single(
+                actions: widget.actions,
+                backgroundColor: widget.backgroundColor,
                 controller: _controller as SingleSelectController<T>,
+                dividerColor: widget.dividerColor,
+                elevation: widget.elevation,
+                header: widget.header,
+                headerTitle: widget.headerTitle,
                 itemTitle: widget.itemTitle,
+                isThreeLine: widget.isThreeLine,
+                itemBuilder: widget.itemBuilder,
+                onMaxScrollExtent: widget.onMaxScrollExtent,
+                onSearchTextChanged: widget.onSearchTextChanged,
+                onSelectionChanged: widget.onSingleSelectionChanged,
+                padding: widget.viewPadding,
+                progressIndicator: widget.progressIndicator,
+                searchable: widget.searchable,
+                searchViewBuilder: widget.searchViewBuilder,
+                secondary: widget.secondary,
+                subtitle: widget.subtitle,
+                showDefaultHeader: widget.dropdownProperties.showDefaultHeader,
               );
       },
     ).then((value) {
@@ -441,9 +484,10 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
                   _state?.didChange(values);
                   widget.onMultiSelectionChanged?.call(values, item, checked);
                 },
+                padding: widget.viewPadding,
                 progressIndicator: widget.progressIndicator,
                 searchable: widget.searchable,
-                searchBuilder: widget.searchBuilder,
+                searchViewBuilder: widget.searchViewBuilder,
                 secondary: widget.secondary,
                 subtitle: widget.subtitle,
                 shape: widget.shape,
@@ -469,9 +513,10 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
                   _state?.didChange(value);
                   widget.onSingleSelectionChanged?.call(value);
                 },
+                padding: widget.viewPadding,
                 progressIndicator: widget.progressIndicator,
                 searchable: widget.searchable,
-                searchBuilder: widget.searchBuilder,
+                searchViewBuilder: widget.searchViewBuilder,
                 secondary: widget.secondary,
                 subtitle: widget.subtitle,
                 shape: widget.shape,
@@ -553,7 +598,7 @@ abstract class SelectableListController<T> extends ChangeNotifier {
   ProgressIndicatorPosition progressIndicatorPosition =
       ProgressIndicatorPosition.center;
 
-  /// Gets passed to the default search TextField, and to the `searchBuilder`
+  /// Gets passed to the default search TextField, and to the `searchViewBuilder`
   /// callback of SelectableList.
   final TextEditingController _searchController;
 
@@ -732,18 +777,21 @@ class DropdownProperties {
 
   /// Determines whether the `anchorKey` will be passed to `showDropdown`.
   final bool anchor;
-  final double? width;
+  final BoxConstraints? constraints;
 
   /// Applied to the starting position of the dropdown.
   final Offset? offset;
-  final BoxConstraints? constraints;
+
+  final bool showDefaultHeader;
+  final double? width;
 
   const DropdownProperties({
     this.alignment = DropdownAligmnent.center,
     this.anchor = true,
-    this.width,
-    this.offset,
     this.constraints,
+    this.offset,
+    this.showDefaultHeader = false,
+    this.width,
   });
 }
 

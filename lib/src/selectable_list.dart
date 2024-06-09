@@ -20,7 +20,7 @@ class SelectableList<T> extends StatefulWidget {
     this.progressIndicator,
     this.scrollController,
     this.scrollDirection = Axis.vertical,
-    this.searchBuilder,
+    this.searchViewBuilder,
     this.secondary,
     this.subtitle,
   })  : initialValueList = null,
@@ -53,7 +53,7 @@ class SelectableList<T> extends StatefulWidget {
     this.progressIndicator,
     this.scrollController,
     this.scrollDirection = Axis.vertical,
-    this.searchBuilder,
+    this.searchViewBuilder,
     this.secondary,
     this.subtitle,
   })  : initialValueList = initialValue,
@@ -126,7 +126,7 @@ class SelectableList<T> extends StatefulWidget {
   final Widget Function(T)? secondary;
   final Widget Function(T)? subtitle;
 
-  final Widget Function(TextEditingController, Widget)? searchBuilder;
+  final Widget Function(TextEditingController, Widget)? searchViewBuilder;
 
   @override
   State<SelectableList<T>> createState() => _SelectableListState<T>();
@@ -273,7 +273,7 @@ class _SelectableListState<T> extends State<SelectableList<T>> {
           );
 
           if (_controller.searchActive) {
-            searchView = widget.searchBuilder?.call(
+            searchView = widget.searchViewBuilder?.call(
               _controller.searchController,
               selectableListView,
             );

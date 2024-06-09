@@ -105,7 +105,7 @@ class SideSheetRoute<T> extends PopupRoute<T> {
         child: child,
       );
     }
-    return _transitionBuilder!(context, animation, secondaryAnimation, child);
+    return _transitionBuilder(context, animation, secondaryAnimation, child);
   }
 
   @override

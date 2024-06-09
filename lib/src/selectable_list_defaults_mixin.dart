@@ -7,6 +7,7 @@ mixin ModalDefaultsMixin<T> {
     String? headerTitle,
     String Function(T)? itemTitle,
     void Function(String)? onSearchTextChanged,
+    final EdgeInsetsGeometry? padding,
     bool searchable = false,
   }) {
     return _DefaultHeader<T>(
@@ -15,6 +16,7 @@ mixin ModalDefaultsMixin<T> {
       itemTitle: itemTitle,
       onSearchTextChanged: onSearchTextChanged,
       searchable: searchable,
+      padding: padding,
     );
   }
 
@@ -36,19 +38,21 @@ mixin ModalDefaultsMixin<T> {
 }
 
 class _DefaultHeader<T> extends StatefulWidget {
-  final String? headerTitle;
-  final bool searchable;
-  final void Function(String)? onSearchTextChanged;
   final SelectableListController<T> controller;
+  final String? headerTitle;
   final String Function(T)? itemTitle;
+  final void Function(String)? onSearchTextChanged;
+  final EdgeInsetsGeometry? padding;
+  final bool searchable;
 
   const _DefaultHeader({
     super.key,
+    required this.controller,
     this.headerTitle,
     this.itemTitle,
-    this.searchable = false,
     this.onSearchTextChanged,
-    required this.controller,
+    this.padding,
+    this.searchable = false,
   });
 
   @override
@@ -75,7 +79,8 @@ class __DefaultHeaderState<T> extends State<_DefaultHeader<T>> {
         listenable: widget.controller,
         builder: (context, _) {
           return Padding(
-            padding: const EdgeInsets.only(bottom: 12, right: 20),
+            padding:
+                widget.padding ?? const EdgeInsets.only(bottom: 12, right: 20),
             child: widget.controller.searchActive
                 ? TextField(
                     controller: widget.controller.searchController,

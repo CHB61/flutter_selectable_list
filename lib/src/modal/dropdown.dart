@@ -18,26 +18,30 @@ enum DropdownAligmnent {
 Future<T?> showModalDropdown<T>({
   GlobalKey? anchorKey,
   DropdownAligmnent alignment = DropdownAligmnent.center,
+  Color? backgroundColor,
   Color? barrierColor,
   bool barrierDismissible = true,
   String? barrierLabel,
   required WidgetBuilder builder,
-  required BuildContext context,
-  Duration transitionDuration = const Duration(milliseconds: 400),
-  Offset? offset,
-  double? width,
   BoxConstraints? constraints,
+  required BuildContext context,
+  double? elevation,
+  Offset? offset,
+  Duration transitionDuration = const Duration(milliseconds: 400),
+  double? width,
 }) {
   final NavigatorState navigator = Navigator.of(context);
   return navigator.push(
     DropdownRoute<T>(
       alignment: alignment,
       anchorKey: anchorKey,
+      backgroundColor: backgroundColor,
       barrierDismissible: barrierDismissible,
       barrierColor: barrierColor,
       barrierLabel: barrierLabel,
       builder: builder,
       constraints: constraints,
+      elevation: elevation,
       offset: offset,
       transitionDuration: transitionDuration,
       width: width,
@@ -52,7 +56,9 @@ class DropdownRoute<T> extends PopupRoute<T> {
     bool barrierDismissible = true,
     Color? barrierColor = const Color(0x80000000),
     String? barrierLabel,
+    this.backgroundColor,
     TextDirection direction = TextDirection.ltr,
+    this.elevation,
     this.offset,
     Duration transitionDuration = const Duration(milliseconds: 400),
     double? width,
@@ -69,15 +75,17 @@ class DropdownRoute<T> extends PopupRoute<T> {
 
   final WidgetBuilder _builder;
   final double? _width;
-  final GlobalKey? anchorKey;
-  final Offset? offset;
-  final BoxConstraints? constraints;
   final DropdownAligmnent alignment;
+  final GlobalKey? anchorKey;
+  final Color? backgroundColor;
+  final BoxConstraints? constraints;
+  final double? elevation;
+  final Offset? offset;
 
-  final Duration _transitionDuration;
   final Color? _barrierColor;
   final bool _barrierDismissible;
   final String? _barrierLabel;
+  final Duration _transitionDuration;
 
   Rect? getRect() {
     final BuildContext? context = anchorKey?.currentContext;
@@ -151,11 +159,11 @@ class DropdownRoute<T> extends PopupRoute<T> {
     _DropdownDefaultsM3 defaults = _DropdownDefaultsM3(context);
 
     Widget child = Material(
-      elevation: defaults.elevation,
+      elevation: elevation ?? defaults.elevation,
       clipBehavior: Clip.antiAlias,
-      // color: Theme.of(context).colorScheme.surface,
-      shadowColor: defaults.shadowColor,
+      color: backgroundColor ?? defaults.backgroundColor,
       surfaceTintColor: defaults.surfaceTintColor,
+      shadowColor: defaults.shadowColor,
       shape: defaults.shape,
       child: ConstrainedBox(
         constraints: constraints ?? BoxConstraints(maxHeight: maxHeight),
@@ -202,7 +210,6 @@ class _DropdownDefaultsM3 {
 
   final BuildContext context;
   late final ColorScheme _colors = Theme.of(context).colorScheme;
-  late final TextTheme _textTheme = Theme.of(context).textTheme;
 
   Alignment get alignment => Alignment.center;
   double get elevation => 6.0;
@@ -211,6 +218,4 @@ class _DropdownDefaultsM3 {
   Color? get backgroundColor => _colors.surface;
   Color? get shadowColor => Theme.of(context).shadowColor;
   Color? get surfaceTintColor => _colors.surfaceTint;
-  TextStyle? get titleTextStyle => _textTheme.headlineSmall;
-  TextStyle? get contentTextStyle => _textTheme.bodyMedium;
 }

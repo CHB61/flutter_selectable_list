@@ -54,6 +54,8 @@ class SelectableListSideSheet<T> extends StatefulWidget {
   final SingleSelectController<T>? singleSelectController;
   final MultiSelectController<T>? multiSelectController;
 
+  final EdgeInsetsGeometry? padding;
+
   /// Widget to be displayed when [SelectableListController.loading] is `true`.
   /// The position of this widget can be set using the [SelectableListController.progressIndicatorPosition].
   final Widget? progressIndicator;
@@ -61,7 +63,7 @@ class SelectableListSideSheet<T> extends StatefulWidget {
   /// Enables the default search functionality. Has no effect when [header] is provided.
   final bool searchable;
 
-  final Widget Function(TextEditingController, Widget)? searchBuilder;
+  final Widget Function(TextEditingController, Widget)? searchViewBuilder;
   final Widget Function(T)? secondary;
 
   final ShapeBorder? shape;
@@ -87,9 +89,10 @@ class SelectableListSideSheet<T> extends StatefulWidget {
     this.onMaxScrollExtent,
     this.onSearchTextChanged,
     void Function(T?)? onSelectionChanged,
+    this.padding,
     this.progressIndicator,
     this.searchable = false,
-    this.searchBuilder,
+    this.searchViewBuilder,
     this.secondary,
     this.shape,
     this.subtitle,
@@ -118,9 +121,10 @@ class SelectableListSideSheet<T> extends StatefulWidget {
     this.onMaxScrollExtent,
     this.onSearchTextChanged,
     OnMultiSelectionChanged onSelectionChanged,
+    this.padding,
     this.progressIndicator,
     this.searchable = false,
-    this.searchBuilder,
+    this.searchViewBuilder,
     this.secondary,
     this.shape,
     this.subtitle,
@@ -139,7 +143,6 @@ class SelectableListSideSheet<T> extends StatefulWidget {
 
 class _SelectableListSideSheetState<T> extends State<SelectableListSideSheet<T>>
     with ModalDefaultsMixin<T> {
-  // Stores the controller value when opened (initState is invoked).
   // Used to pop with the initial value when cancel is tapped.
   List<T> originalValue = [];
 
@@ -172,7 +175,7 @@ class _SelectableListSideSheetState<T> extends State<SelectableListSideSheet<T>>
         surfaceTintColor: defaults.surfaceTintColor,
         shape: widget.shape ?? defaults.shape,
         child: Padding(
-          padding: const EdgeInsets.all(24),
+          padding: widget.padding ?? const EdgeInsets.all(24),
           child: Column(
             children: [
               widget.header ??
@@ -201,7 +204,7 @@ class _SelectableListSideSheetState<T> extends State<SelectableListSideSheet<T>>
                         secondary: widget.secondary,
                         subtitle: widget.subtitle,
                         onScrollThresholdReached: widget.onMaxScrollExtent,
-                        searchBuilder: widget.searchBuilder,
+                        searchViewBuilder: widget.searchViewBuilder,
                       )
                     : SelectableList.single(
                         backgroundColor: widget.backgroundColor,
@@ -215,7 +218,7 @@ class _SelectableListSideSheetState<T> extends State<SelectableListSideSheet<T>>
                         secondary: widget.secondary,
                         subtitle: widget.subtitle,
                         onScrollThresholdReached: widget.onMaxScrollExtent,
-                        searchBuilder: widget.searchBuilder,
+                        searchViewBuilder: widget.searchViewBuilder,
                       ),
               ),
               Divider(

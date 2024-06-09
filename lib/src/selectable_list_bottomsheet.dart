@@ -55,10 +55,12 @@ class SelectableListBottomSheet<T> extends StatefulWidget {
   final void Function(String)? onSearchTextChanged;
   final void Function(T?)? onSingleSelectionChanged;
 
+  final EdgeInsetsGeometry? padding;
+
   /// Enables the default search functionality. Has no effect when [header] is provided.
   final bool searchable;
 
-  final Widget Function(TextEditingController, Widget)? searchBuilder;
+  final Widget Function(TextEditingController, Widget)? searchViewBuilder;
   final Widget Function(T)? secondary;
   final Widget Function(T)? subtitle;
 
@@ -81,8 +83,9 @@ class SelectableListBottomSheet<T> extends StatefulWidget {
     void Function(T?)? onConfirm,
     this.onSearchTextChanged,
     void Function(T?)? onSelectionChanged,
+    this.padding,
     this.searchable = false,
-    this.searchBuilder,
+    this.searchViewBuilder,
     this.secondary,
     this.shape,
     this.subtitle,
@@ -111,8 +114,9 @@ class SelectableListBottomSheet<T> extends StatefulWidget {
     void Function(List<T>)? onConfirm,
     this.onSearchTextChanged,
     OnMultiSelectionChanged onSelectionChanged,
+    this.padding,
     this.searchable = false,
-    this.searchBuilder,
+    this.searchViewBuilder,
     this.secondary,
     this.shape,
     this.subtitle,
@@ -131,7 +135,6 @@ class SelectableListBottomSheet<T> extends StatefulWidget {
 
 class _SelectableListBottomSheetState<T>
     extends State<SelectableListBottomSheet<T>> with ModalDefaultsMixin<T> {
-  // Stores the controller value when the dialog is opened (initState is invoked).
   // Used to pop with the initial value when cancel is tapped.
   List<T> originalValue = [];
 
@@ -171,7 +174,7 @@ class _SelectableListBottomSheetState<T>
           surfaceTintColor: Theme.of(context).colorScheme.surfaceTint,
           shape: widget.shape ?? bottomSheetTheme.shape ?? defaults.shape,
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: widget.padding ?? const EdgeInsets.all(24),
             child: Column(
               children: [
                 widget.header ??

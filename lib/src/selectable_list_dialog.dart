@@ -58,6 +58,8 @@ class SelectableListDialog<T> extends StatefulWidget {
   final void Function(T?)? onSingleSelectionChanged;
   final OnMultiSelectionChanged onMultiSelectionChanged;
 
+  final EdgeInsetsGeometry? padding;
+
   /// Widget to be displayed when [SelectableListController.loading] is `true`.
   /// The position of this widget can be set using the [SelectableListController.progressIndicatorPosition].
   final Widget? progressIndicator;
@@ -67,7 +69,7 @@ class SelectableListDialog<T> extends StatefulWidget {
 
   /// Enables the default search functionality. Has no effect when [header] is provided.
   final bool searchable;
-  final Widget Function(TextEditingController, Widget)? searchBuilder;
+  final Widget Function(TextEditingController, Widget)? searchViewBuilder;
   final Widget Function(T)? secondary;
   final ShapeBorder? shape;
   final Widget Function(T)? subtitle;
@@ -94,9 +96,10 @@ class SelectableListDialog<T> extends StatefulWidget {
     this.onMaxScrollExtent,
     this.onSearchTextChanged,
     void Function(T?)? onSelectionChanged,
+    this.padding,
     this.progressIndicator,
     this.searchable = false,
-    this.searchBuilder,
+    this.searchViewBuilder,
     this.secondary,
     this.shape,
     this.subtitle,
@@ -126,9 +129,10 @@ class SelectableListDialog<T> extends StatefulWidget {
     this.onMaxScrollExtent,
     this.onSearchTextChanged,
     OnMultiSelectionChanged onSelectionChanged,
+    this.padding,
     this.progressIndicator,
     this.searchable = false,
-    this.searchBuilder,
+    this.searchViewBuilder,
     this.secondary,
     this.shape,
     this.subtitle,
@@ -148,7 +152,6 @@ class SelectableListDialog<T> extends StatefulWidget {
 
 class _SelectableListDialogState<T> extends State<SelectableListDialog<T>>
     with ModalDefaultsMixin<T> {
-  // Stores the controller value when opened (initState is invoked).
   // Used to pop with the initial value when cancel is tapped.
   List<T> originalValue = [];
 
@@ -186,7 +189,7 @@ class _SelectableListDialogState<T> extends State<SelectableListDialog<T>>
               : DialogTheme.of(context).elevation ?? 6),
       shape: widget.shape,
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: widget.padding ?? const EdgeInsets.all(24),
         child: SizedBox(
           height: widget.height ?? MediaQuery.of(context).size.height * 0.7,
           width: widget.width ?? MediaQuery.of(context).size.width * 0.7,
@@ -206,8 +209,8 @@ class _SelectableListDialogState<T> extends State<SelectableListDialog<T>>
                 color: widget.dividerColor,
               ),
               Expanded(
-                // Controller is non nullable in SelectableListDialog, therefore
-                // 'initialValue' and 'items' cannot be used due to the assert
+                // `controller` is non nullable in SelectableListDialog, therefore
+                // `initialValue` and `items` cannot be used due to the assert
                 // in SelectableList.
                 child: widget.multiselect
                     ? SelectableList<T>.multi(
@@ -222,7 +225,7 @@ class _SelectableListDialogState<T> extends State<SelectableListDialog<T>>
                         secondary: widget.secondary,
                         subtitle: widget.subtitle,
                         onScrollThresholdReached: widget.onMaxScrollExtent,
-                        searchBuilder: widget.searchBuilder,
+                        searchViewBuilder: widget.searchViewBuilder,
                       )
                     : SelectableList.single(
                         backgroundColor: widget.backgroundColor,
@@ -236,7 +239,7 @@ class _SelectableListDialogState<T> extends State<SelectableListDialog<T>>
                         secondary: widget.secondary,
                         subtitle: widget.subtitle,
                         onScrollThresholdReached: widget.onMaxScrollExtent,
-                        searchBuilder: widget.searchBuilder,
+                        searchViewBuilder: widget.searchViewBuilder,
                       ),
               ),
               Divider(
