@@ -27,6 +27,7 @@ Future<T?> showModalDropdown<T>({
   required BuildContext context,
   double? elevation,
   Offset? offset,
+  ShapeBorder? shape,
   Duration transitionDuration = const Duration(milliseconds: 400),
   double? width,
 }) {
@@ -43,6 +44,7 @@ Future<T?> showModalDropdown<T>({
       constraints: constraints,
       elevation: elevation,
       offset: offset,
+      shape: shape,
       transitionDuration: transitionDuration,
       width: width,
     ),
@@ -65,6 +67,7 @@ class DropdownRoute<T> extends PopupRoute<T> {
     this.alignment = DropdownAligmnent.center,
     this.constraints,
     super.settings,
+    this.shape,
     super.traversalEdgeBehavior,
   })  : _barrierColor = barrierColor,
         _barrierDismissible = barrierDismissible,
@@ -81,6 +84,7 @@ class DropdownRoute<T> extends PopupRoute<T> {
   final BoxConstraints? constraints;
   final double? elevation;
   final Offset? offset;
+  final ShapeBorder? shape;
 
   final Color? _barrierColor;
   final bool _barrierDismissible;
@@ -164,7 +168,7 @@ class DropdownRoute<T> extends PopupRoute<T> {
       color: backgroundColor ?? defaults.backgroundColor,
       surfaceTintColor: defaults.surfaceTintColor,
       shadowColor: defaults.shadowColor,
-      shape: defaults.shape,
+      shape: shape ?? defaults.shape,
       child: ConstrainedBox(
         constraints: constraints ?? BoxConstraints(maxHeight: maxHeight),
         child: SizeTransition(
