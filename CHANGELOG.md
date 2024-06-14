@@ -1,3 +1,7 @@
+## 0.0.4
+
+- Added `shape` parameter for `showModalDropdown` function.
+
 ## 0.0.3
 
 - Renamed `searchBuilder` to `searchViewBuilder`
