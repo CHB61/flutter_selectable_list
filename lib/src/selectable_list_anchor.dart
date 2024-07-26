@@ -388,6 +388,7 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
       constraints: widget.dropdownProperties.constraints,
       elevation: widget.elevation,
       offset: widget.dropdownProperties.offset,
+      shape: widget.shape,
       width: widget.dropdownProperties.width,
       builder: (ctx) {
         return widget.multiselect
