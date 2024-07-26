@@ -1,3 +1,7 @@
+## 0.0.5
+
+- Pass shape parameter from SelectableListAnchor to showModalDropdown.
+
 ## 0.0.4
 
 - Added `shape` parameter for `showModalDropdown` function.
