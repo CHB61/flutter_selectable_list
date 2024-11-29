@@ -2,8 +2,10 @@
 
 A widget library that simplifies building selectable lists.
 
-| Placeholder<br /><sub><b>SelectableListAnchor</b></sub> | 
-| :---: |
+| SelectableList | SelectableListAnchor |
+| :---: | :---: |
+| <sub><b>SelectableListAnchor</b></sub> | <sub><b>SelectableListAnchor</b></sub> |
+
 
 ## Features
 - <b>*SelectableList*</b> - a customizable ListView

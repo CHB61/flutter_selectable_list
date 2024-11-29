@@ -8,20 +8,27 @@ class SelectableList<T> extends StatefulWidget {
     this.checkboxShape,
     this.controlAffinity = ListTileControlAffinity.platform,
     SingleSelectController<T>? controller,
-    this.elevation,
+    this.dividerColor,
+    this.elevation = 0.0,
+    this.header,
+    this.headerPadding,
+    this.headerTitle,
     T? initialValue,
     this.isThreeLine = false,
     this.itemBuilder,
     this.items,
     this.itemTitle,
-    this.maxScrollThreshold = 0.85,
+    this.scrollThreshold = 0.85,
     this.onScrollThresholdReached,
     void Function(T?)? onSelectionChanged,
+    this.onSearchTextChanged,
     this.progressIndicator,
     this.scrollController,
     this.scrollDirection = Axis.vertical,
     this.searchViewBuilder,
     this.secondary,
+    this.showDefaultHeader = false,
+    this.showSearchField = false,
     this.subtitle,
   })  : initialValueList = null,
         initialValueSingle = initialValue,
@@ -33,7 +40,7 @@ class SelectableList<T> extends StatefulWidget {
         assert(initialValue == null || controller == null),
         assert(items == null || controller == null),
         assert(items != null || controller != null),
-        assert(maxScrollThreshold >= 0 && maxScrollThreshold <= 1);
+        assert(scrollThreshold >= 0 && scrollThreshold <= 1);
 
   const SelectableList.multi({
     super.key,
@@ -41,20 +48,27 @@ class SelectableList<T> extends StatefulWidget {
     this.checkboxShape,
     this.controlAffinity = ListTileControlAffinity.platform,
     MultiSelectController<T>? controller,
-    this.elevation,
+    this.dividerColor,
+    this.elevation = 0.0,
+    this.header,
+    this.headerPadding,
+    this.headerTitle,
     List<T>? initialValue,
     this.isThreeLine = false,
     this.itemBuilder,
     this.items,
     this.itemTitle,
-    this.maxScrollThreshold = 0.85,
+    this.scrollThreshold = 0.85,
     this.onScrollThresholdReached,
     OnMultiSelectionChanged onSelectionChanged,
+    this.onSearchTextChanged,
     this.progressIndicator,
     this.scrollController,
     this.scrollDirection = Axis.vertical,
     this.searchViewBuilder,
     this.secondary,
+    this.showDefaultHeader = false,
+    this.showSearchField = false,
     this.subtitle,
   })  : initialValueList = initialValue,
         initialValueSingle = null,
@@ -66,7 +80,7 @@ class SelectableList<T> extends StatefulWidget {
         assert(initialValue == null || controller == null),
         assert(items == null || controller == null),
         assert(items != null || controller != null),
-        assert(maxScrollThreshold >= 0 && maxScrollThreshold <= 1);
+        assert(scrollThreshold >= 0 && scrollThreshold <= 1);
 
   final Color? backgroundColor;
 
@@ -75,7 +89,17 @@ class SelectableList<T> extends StatefulWidget {
   /// Where to place the control relative to the text on the [CheckboxListTile].
   final ListTileControlAffinity controlAffinity;
 
-  final double? elevation;
+  final Color? dividerColor;
+
+  final double elevation;
+
+  /// Replaces the default header.
+  final Widget? header;
+
+  final EdgeInsetsGeometry? headerPadding;
+
+  /// The default value is "Select" and the [TextStyle] uses [TextTheme.titleLarge].
+  final String? headerTitle;
 
   final List<T>? initialValueList;
   final T? initialValueSingle;
@@ -94,13 +118,14 @@ class SelectableList<T> extends StatefulWidget {
   /// This value is used as a percentage (which ranges from 0.0 to 1.0) of the
   /// `maxScrollExtent` to determine when to call [onScrollThresholdReached]
   /// based on the current scroll position. The default value is `0.8`.
-  // final double maxScrollThreshold;
-  final double maxScrollThreshold;
+  final double scrollThreshold;
 
   final bool multiselect;
 
   final OnMultiSelectionChanged onMultiSelectionChanged;
   final void Function(T?)? onSingleSelectionChanged;
+
+  final void Function(String)? onSearchTextChanged;
 
   /// Widget to be displayed when [SelectableListController.loading] is `true`.
   /// The position of this widget can be set using the [SelectableListController.progressIndicatorPosition].
@@ -124,6 +149,12 @@ class SelectableList<T> extends StatefulWidget {
   final ScrollController? scrollController;
   final Axis scrollDirection;
   final Widget Function(T)? secondary;
+
+  final bool showDefaultHeader;
+
+  /// Enables the default header's search functionality.
+  final bool showSearchField;
+
   final Widget Function(T)? subtitle;
 
   final Widget Function(TextEditingController, Widget)? searchViewBuilder;
@@ -133,7 +164,7 @@ class SelectableList<T> extends StatefulWidget {
 }
 
 class _SelectableListState<T> extends State<SelectableList<T>> {
-  late SelectableListController _controller;
+  late SelectableListController<T> _controller;
   late ScrollController _scrollController;
   double _maxScrollExtent = 0;
   bool _calledMaxExtent = false;
@@ -180,7 +211,7 @@ class _SelectableListState<T> extends State<SelectableList<T>> {
         }
       }
 
-      double nextPageTrigger = widget.maxScrollThreshold * currMaxScrollExtent;
+      double nextPageTrigger = widget.scrollThreshold * currMaxScrollExtent;
       double currentPosition = _scrollController.position.pixels;
 
       if (currentPosition > nextPageTrigger && !_calledMaxExtent) {
@@ -193,9 +224,8 @@ class _SelectableListState<T> extends State<SelectableList<T>> {
   Widget _buildListItem(T item, int index) {
     return Material(
       color: widget.backgroundColor,
-      surfaceTintColor:
-          widget.backgroundColor ?? Theme.of(context).colorScheme.surfaceTint,
-      elevation: widget.elevation ?? 0,
+      surfaceTintColor: Theme.of(context).colorScheme.surfaceTint,
+      elevation: widget.elevation,
       shadowColor: Colors.transparent,
       child: CheckboxListTile(
         checkboxShape: widget.checkboxShape,
@@ -238,7 +268,7 @@ class _SelectableListState<T> extends State<SelectableList<T>> {
       color: widget.backgroundColor,
       surfaceTintColor:
           widget.backgroundColor ?? Theme.of(context).colorScheme.surfaceTint,
-      elevation: widget.elevation ?? 0,
+      elevation: widget.elevation,
       shadowColor: Colors.transparent,
       child: Center(
         child: widget.progressIndicator ??
@@ -279,7 +309,29 @@ class _SelectableListState<T> extends State<SelectableList<T>> {
             );
           }
 
-          return searchView ?? selectableListView;
+          // return searchView ?? selectableListView;
+
+          return Column(
+            children: [
+              widget.header ??
+                  (widget.showDefaultHeader
+                      ? _DefaultHeader(
+                          controller: _controller,
+                          title: widget.headerTitle,
+                          showSearchField: widget.showSearchField,
+                          onSearchTextChanged: widget.onSearchTextChanged,
+                          itemTitle: widget.itemTitle,
+                          padding: widget.headerPadding,
+                        )
+                      : Container()),
+              if (widget.showDefaultHeader || widget.header != null)
+                Divider(
+                  height: 1,
+                  color: widget.dividerColor,
+                ),
+              Expanded(child: searchView ?? selectableListView),
+            ],
+          );
         });
   }
 }
@@ -348,3 +400,100 @@ enum ProgressIndicatorPosition {
 
 typedef OnMultiSelectionChanged<T> = void Function(
     List<T> value, T item, bool selected)?;
+
+class _DefaultHeader<T> extends StatefulWidget {
+  final SelectableListController<T> controller;
+  final String? title;
+  final String Function(T)? itemTitle;
+  final void Function(String)? onSearchTextChanged;
+  final EdgeInsetsGeometry? padding;
+  final bool showSearchField;
+
+  const _DefaultHeader({
+    super.key,
+    required this.controller,
+    this.title,
+    this.itemTitle,
+    this.onSearchTextChanged,
+    this.padding,
+    this.showSearchField = false,
+  });
+
+  @override
+  State<_DefaultHeader<T>> createState() => __DefaultHeaderState<T>();
+}
+
+class __DefaultHeaderState<T> extends State<_DefaultHeader<T>> {
+  final FocusNode _focusNode = FocusNode();
+
+  void _search(String text) {
+    List<T> filteredItems = [];
+
+    filteredItems = widget.controller.items.where((e) {
+      String name = widget.itemTitle?.call(e) ?? e.toString();
+      return name.toLowerCase().contains(text.toLowerCase());
+    }).toList();
+
+    widget.controller.setFilteredItems(filteredItems);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+        listenable: widget.controller,
+        builder: (context, _) {
+          return Padding(
+            padding:
+                widget.padding ?? const EdgeInsets.only(bottom: 12, right: 12),
+            child: widget.controller.searchActive
+                ? TextField(
+                    controller: widget.controller.searchController,
+                    focusNode: _focusNode,
+                    onChanged: widget.onSearchTextChanged ?? _search,
+                    decoration: InputDecoration(
+                      hintText: 'Search',
+                      prefixIcon: IconButton(
+                        onPressed: () {
+                          widget.controller.setSearchValue("");
+                          widget.controller.setFilteredItems(null, false);
+                          widget.controller.setSearchActive(false);
+                        },
+                        icon: const Icon(Icons.arrow_back),
+                      ),
+                      suffixIcon: IconButton(
+                        onPressed: () {
+                          widget.controller.setSearchValue("");
+                          widget.controller.setFilteredItems(null);
+                        },
+                        icon: const Icon(Icons.close),
+                      ),
+                    ),
+                  )
+                : Container(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            widget.title ?? "Select",
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                        ),
+                        widget.showSearchField
+                            ? IconButton(
+                                onPressed: () {
+                                  widget.controller.setSearchActive(true);
+                                  _focusNode.requestFocus();
+                                },
+                                icon: const Icon(Icons.search),
+                              )
+                            : Container(),
+                      ],
+                    ),
+                  ),
+          );
+        });
+  }
+}
