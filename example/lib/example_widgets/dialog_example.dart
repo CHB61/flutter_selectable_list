@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_selectable_list/flutter_selectable_list.dart';
 
 class DialogExample extends StatefulWidget {
-  const DialogExample({Key? key}) : super(key: key);
+  const DialogExample({super.key});
 
   @override
   State<DialogExample> createState() => _DialogExampleState();

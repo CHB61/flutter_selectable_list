@@ -28,6 +28,7 @@ class SelectableList<T> extends StatefulWidget {
     this.scrollDirection = Axis.vertical,
     this.searchViewBuilder,
     this.secondary,
+    this.selectedTileColor,
     this.subtitle,
     this.surfaceTintColor,
   })  : initialValueList = null,
@@ -68,6 +69,7 @@ class SelectableList<T> extends StatefulWidget {
     this.scrollDirection = Axis.vertical,
     this.searchViewBuilder,
     this.secondary,
+    this.selectedTileColor,
     this.subtitle,
     this.surfaceTintColor,
   })  : initialValueList = initialValue,
@@ -165,6 +167,8 @@ class SelectableList<T> extends StatefulWidget {
   final Axis scrollDirection;
   final Widget Function(T)? secondary;
 
+  final Color? selectedTileColor;
+
   final Widget Function(T)? subtitle;
 
   final Widget Function(TextEditingController, Widget)? searchViewBuilder;
@@ -256,7 +260,8 @@ class _SelectableListState<T> extends State<SelectableList<T>> {
         ),
         checkboxShape: widget.checkboxShape,
         selected: _controller.isItemChecked(item),
-        selectedTileColor: Theme.of(context).primaryColor.withOpacity(0.4),
+        selectedTileColor: widget.selectedTileColor ??
+            Theme.of(context).primaryColor.withAlpha(100),
         // tileColor: widget.backgroundColor,
         // checkColor: widget.checkColor,
         value: _controller.isItemChecked(item),

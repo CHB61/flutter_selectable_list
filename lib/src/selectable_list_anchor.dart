@@ -427,13 +427,10 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
           },
       pageBuilder: (ctx, animation, _) {
         _SelectableListDefaultsM3 defaults = _SelectableListDefaultsM3(context);
-        DialogTheme dialogTheme = Theme.of(context).dialogTheme;
-        double? elevation =
-            widget.elevation ?? dialogTheme.elevation ?? defaults.elevation;
 
         return Dialog(
           backgroundColor: widget.backgroundColor,
-          elevation: elevation,
+          elevation: widget.elevation ?? defaults.elevation,
           shape: widget.shape,
           // shadowColor: widget.shadowColor ?? defaults.shadowColor,
           surfaceTintColor: widget.surfaceTintColor ?? Colors.transparent,
@@ -443,7 +440,6 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
             width: widget.dialogProperties.width ??
                 MediaQuery.of(context).size.width * 0.7,
             child: _buildSelectableList(
-              elevation: elevation,
               showDefaultActions: true,
             ),
           ),
