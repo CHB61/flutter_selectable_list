@@ -2,9 +2,9 @@
 
 #### A practical solution to streamline building and managing the state of selectable lists.
 
-| SelectableList | SelectableListAnchor |
-| :---: | :---: |
-| <sub><b>SelectableListAnchor</b></sub> | <sub><b>SelectableListAnchor</b></sub> |
+| SelectableListAnchor |
+| :---: |
+| <img src="https://github.com/CHB61/flutter_selectable_list/blob/master/doc/anchor_example.mp4?raw=true" alt="An example video of the SelectableListAnchor" height="400"/> |
 
 
 ## Features

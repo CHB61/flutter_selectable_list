@@ -1,6 +1,6 @@
 name: flutter_selectable_list
-description: "A widget library that simplifies building selectable lists, and provides a variety of options to display them."
-version: 0.0.5
+description: "A practical solution to streamline building and managing the state of selectable lists."
+version: 0.0.6
 repository: https://github.com/CHB61/flutter_selectable_list
 issue_tracker: https://github.com/CHB61/flutter_selectable_list
 documentation: https://github.com/CHB61/flutter_selectable_list
