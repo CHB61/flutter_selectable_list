@@ -1,14 +1,11 @@
 ## 0.0.6
 
-- Removed all of the "select" widgets (SelectableListDialog, SelectableListDropdown, SelectableListSidesheet, SelectableListBottomsheet) in favor of using the SelectableListAnchor to open each type. If not using anchor, user can simply create their own container for the SelectableList.
-- changed name of searchable to showSearchField
+- Removed all of the "select" widgets (SelectableListDialog, SelectableListDropdown, SelectableListSidesheet, SelectableListBottomsheet) in favor of using the SelectableListAnchor to open each type. If not using anchor, can simply create a container for the SelectableList.
+- changed name of `searchable` to `enableDefaultSearch`
 - SelectableList
 	- changed elevation to be non-nullable with default value of 0.0
+	- changed surfaceTintColor to have a default value of null
 	- changed name of maxScrollThreshold to scrollThreshold
-	- removed widget.bacgroundColor as the primary value for surfaceTintColor
-	- added parameters header, headerPadding, headerTitle, onSearchTextChanged, showDefaultHeader, showSearchField
-	- now returning a column to be able to display the header
-
 
 ## 0.0.5
 

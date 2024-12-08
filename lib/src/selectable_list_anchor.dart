@@ -17,6 +17,11 @@ class SelectableListAnchor<T> extends StatefulWidget {
 
   final Key? formFieldKey;
 
+  /// {@macro selectable_list_float_selected}
+  final bool floatSelectedValue;
+
+  final Color? foregroundColor;
+
   /// Replaces the default header of the view.
   final Widget? header;
 
@@ -24,10 +29,17 @@ class SelectableListAnchor<T> extends StatefulWidget {
   final String? headerTitle;
 
   /// Overrides the default [CheckboxListTile].
+  /// {@macro selectable_list_item_builder}
   final Widget Function(T item, int index)? itemBuilder;
+
+  /// {@macro selectable_list_item_extent}
+  final double? itemExtent;
 
   final List<T>? items;
   final String Function(T)? itemTitle;
+
+  /// Passed to the default [ListTile].
+  final bool isThreeLine;
 
   final bool multiselect;
   final Widget Function(MultiSelectController<T>, FormFieldState<List<T>>)?
@@ -41,7 +53,7 @@ class SelectableListAnchor<T> extends StatefulWidget {
   final void Function(List<T>)? onConfirmMulti;
 
   /// Callback for when scroll extent is reached.
-  final Function? onMaxScrollExtent;
+  final Function? onScrollThresholdReached;
 
   final OnMultiSelectionChanged onMultiSelectionChanged;
 
@@ -60,11 +72,14 @@ class SelectableListAnchor<T> extends StatefulWidget {
   final bool resetOnBarrierDismissed;
 
   /// Enables the default header's search functionality.
-  final bool showSearchField;
+  final bool enableDefaultSearch;
 
   final Widget Function(TextEditingController, Widget)? searchViewBuilder;
 
   final Widget Function(T)? secondary;
+
+  /// Defaults to Colors.transparent if not provided.
+  final Color? shadowColor;
 
   final ShapeBorder? shape;
 
@@ -80,12 +95,14 @@ class SelectableListAnchor<T> extends StatefulWidget {
   /// Passed to the default [ListTile].
   final Widget Function(T)? subtitle;
 
-  /// Passed to the default [ListTile].
-  final bool isThreeLine;
-
   final BottomSheetProperties bottomSheetProperties;
   final DropdownProperties dropdownProperties;
   final DialogProperties dialogProperties;
+
+  final Color? surfaceTintColor;
+
+  /// The ListTile color of the default list item.
+  final Color? tileColor;
 
   final EdgeInsetsGeometry? viewPadding;
 
@@ -97,36 +114,39 @@ class SelectableListAnchor<T> extends StatefulWidget {
     this.barrierColor = const Color(0x80000000),
     this.barrierDismissable = true,
     this.barrierLabel,
-    required Widget Function(
-      SelectableListController,
-      FormFieldState<T>,
-    ) builder,
+    required SelectableListAnchorBuilder<T> builder,
     this.bottomSheetProperties = const BottomSheetProperties(),
     SingleSelectController<T>? controller,
     this.dialogProperties = const DialogProperties(),
     this.dividerColor,
     this.dropdownProperties = const DropdownProperties(),
     this.elevation,
+    this.floatSelectedValue = false,
+    this.foregroundColor,
     this.formFieldKey,
     this.header,
     this.headerTitle,
     this.isThreeLine = false,
     this.itemBuilder,
+    this.itemExtent,
     this.items,
     this.itemTitle,
     Function(T)? onBarrierDismissed,
     void Function(T?)? onConfirm,
-    this.onMaxScrollExtent,
+    this.onScrollThresholdReached,
     this.onSearchTextChanged,
     void Function(T?)? onSelectionChanged,
     this.progressIndicator,
     this.resetOnBarrierDismissed = false,
-    this.showSearchField = false,
+    this.enableDefaultSearch = false,
     this.searchViewBuilder,
     this.secondary,
+    this.shadowColor,
     this.shape,
     this.sideSheetProperties = const SideSheetProperties(),
     this.subtitle,
+    this.surfaceTintColor,
+    this.tileColor,
     FormFieldValidator<T>? validator,
     this.viewPadding,
   })  : multiselect = false,
@@ -153,37 +173,40 @@ class SelectableListAnchor<T> extends StatefulWidget {
     this.barrierColor = const Color(0x80000000),
     this.barrierDismissable = true,
     this.barrierLabel,
-    required Widget Function(
-      SelectableListController,
-      FormFieldState<List<T>>,
-    ) builder,
+    required SelectableListAnchorBuilder<List<T>> builder,
     this.bottomSheetProperties = const BottomSheetProperties(),
     MultiSelectController<T>? controller,
     this.dialogProperties = const DialogProperties(),
     this.dividerColor,
     this.dropdownProperties = const DropdownProperties(),
     this.elevation,
+    this.floatSelectedValue = false,
+    this.foregroundColor,
     this.formFieldKey,
     this.header,
     this.headerTitle,
     this.isThreeLine = false,
     this.itemBuilder,
+    this.itemExtent,
     this.items,
     this.itemTitle,
     Function(List<T>)? onBarrierDismissed,
     void Function(List<T>)? onConfirm,
-    this.onMaxScrollExtent,
+    this.onScrollThresholdReached,
     this.onSearchTextChanged,
     OnMultiSelectionChanged onSelectionChanged,
     this.progressIndicator,
     this.resetOnBarrierDismissed = false,
-    this.showSearchField = false,
+    this.enableDefaultSearch = false,
     this.searchViewBuilder,
     this.secondary,
+    this.shadowColor,
     this.shape,
     this.sideSheetProperties = const SideSheetProperties(),
     this.subtitle,
+    this.surfaceTintColor,
     this.viewPadding,
+    this.tileColor,
     FormFieldValidator<List<T>>? validator,
   })  : multiselect = true,
         multiSelectBuilder = builder,
@@ -232,6 +255,8 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
   Widget _buildSelectableList({
     double? elevation,
     EdgeInsetsGeometry? headerPadding,
+    EdgeInsetsGeometry? padding,
+    ShapeBorder? shape,
     bool showDefaultActions = true,
     bool showDefaultHeader = true,
   }) {
@@ -243,98 +268,126 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
             ? [_controller.value]
             : [];
 
-    return Column(
-      children: [
-        Expanded(
-          child: widget.multiselect
-              ? SelectableList<T>.multi(
-                  backgroundColor: widget.backgroundColor,
-                  controller: _controller as MultiSelectController<T>,
-                  dividerColor: widget.dividerColor,
-                  elevation: elevation ?? defaults.elevation,
-                  header: widget.header,
-                  headerPadding: headerPadding,
-                  headerTitle: widget.headerTitle,
-                  isThreeLine: widget.isThreeLine,
-                  itemBuilder: widget.itemBuilder,
-                  itemTitle: widget.itemTitle,
-                  onScrollThresholdReached: widget.onMaxScrollExtent,
-                  onSearchTextChanged: widget.onSearchTextChanged,
-                  onSelectionChanged: (values, item, checked) {
-                    _state?.didChange(values);
-                    widget.onMultiSelectionChanged?.call(values, item, checked);
-                  },
-                  progressIndicator: widget.progressIndicator,
-                  searchViewBuilder: widget.searchViewBuilder,
-                  showSearchField: widget.showSearchField,
-                  secondary: widget.secondary,
-                  // shape: widget.shape,
-                  showDefaultHeader: showDefaultHeader,
-                  subtitle: widget.subtitle,
-                )
-              : SelectableList<T>.single(
-                  backgroundColor: widget.backgroundColor,
-                  controller: _controller as SingleSelectController<T>,
-                  dividerColor: widget.dividerColor,
-                  elevation: elevation ?? defaults.elevation,
-                  header: widget.header,
-                  headerPadding: headerPadding,
-                  headerTitle: widget.headerTitle,
-                  isThreeLine: widget.isThreeLine,
-                  itemBuilder: widget.itemBuilder,
-                  itemTitle: widget.itemTitle,
-                  onScrollThresholdReached: widget.onMaxScrollExtent,
-                  onSearchTextChanged: widget.onSearchTextChanged,
-                  onSelectionChanged: (value) {
-                    _state?.didChange(value);
-                    widget.onSingleSelectionChanged?.call(value);
-                  },
-                  progressIndicator: widget.progressIndicator,
-                  searchViewBuilder: widget.searchViewBuilder,
-                  showSearchField: widget.showSearchField,
-                  secondary: widget.secondary,
-                  // shape: widget.shape,
-                  showDefaultHeader: showDefaultHeader,
-                  subtitle: widget.subtitle,
-                ),
-        ),
-        if (widget.actions != null || showDefaultActions)
-          Divider(
-            height: 1,
-            color: widget.dividerColor,
-          ),
-        widget.actions ??
-            (showDefaultActions
-                ? _DefaultActions(
-                    controller: _controller,
-                    multiselect: widget.multiselect,
-                    originalValue: _originalValue,
-                    onConfirm: (value) {
-                      {
+    return Material(
+      color: widget.backgroundColor,
+      surfaceTintColor: widget.surfaceTintColor,
+      elevation: widget.elevation ?? defaults.elevation,
+      shadowColor: widget.shadowColor,
+      shape: widget.shape ?? shape ?? defaults.shape,
+      child: Padding(
+        padding: widget.viewPadding ?? padding ?? defaults.padding,
+        child: Column(
+          children: [
+            widget.header ??
+                (showDefaultHeader
+                    ? _DefaultHeader(
+                        controller: _controller,
+                        foregroundColor: widget.foregroundColor,
+                        itemTitle: widget.itemTitle,
+                        onSearchTextChanged: widget.onSearchTextChanged,
+                        padding: headerPadding,
+                        enableDefaultSearch: widget.enableDefaultSearch,
+                        title: widget.headerTitle,
+                      )
+                    : Container()),
+            if (widget.header != null || showDefaultHeader)
+              Divider(
+                height: 1,
+                color: widget.dividerColor,
+              ),
+            Expanded(
+              child: widget.multiselect
+                  ? SelectableList<T>.multi(
+                      tileColor: widget.tileColor ?? widget.backgroundColor,
+                      controller: _controller as MultiSelectController<T>,
+                      dividerColor: widget.dividerColor,
+                      elevation: elevation ?? defaults.elevation,
+                      foregroundColor: widget.foregroundColor,
+                      floatSelectedValue: widget.floatSelectedValue,
+                      isThreeLine: widget.isThreeLine,
+                      itemBuilder: widget.itemBuilder,
+                      itemExtent: widget.itemExtent,
+                      itemTitle: widget.itemTitle,
+                      onScrollThresholdReached: widget.onScrollThresholdReached,
+                      onSearchTextChanged: widget.onSearchTextChanged,
+                      onSelectionChanged: (values, item, checked) {
+                        _state?.didChange(values);
+                        widget.onMultiSelectionChanged
+                            ?.call(values, item, checked);
+                      },
+                      progressIndicator: widget.progressIndicator,
+                      searchViewBuilder: widget.searchViewBuilder,
+                      secondary: widget.secondary,
+                      subtitle: widget.subtitle,
+                      surfaceTintColor: widget.surfaceTintColor,
+                    )
+                  : SelectableList<T>.single(
+                      tileColor: widget.tileColor ?? widget.backgroundColor,
+                      controller: _controller as SingleSelectController<T>,
+                      dividerColor: widget.dividerColor,
+                      elevation: elevation ?? defaults.elevation,
+                      floatSelectedValue: widget.floatSelectedValue,
+                      foregroundColor: widget.foregroundColor,
+                      isThreeLine: widget.isThreeLine,
+                      itemBuilder: widget.itemBuilder,
+                      itemExtent: widget.itemExtent,
+                      itemTitle: widget.itemTitle,
+                      onScrollThresholdReached: widget.onScrollThresholdReached,
+                      onSearchTextChanged: widget.onSearchTextChanged,
+                      onSelectionChanged: (value) {
                         _state?.didChange(value);
-                        widget.multiselect
-                            ? widget.onConfirmMulti?.call(value as List<T>)
-                            : widget.onConfirmSingle?.call(value as T);
-                      }
-                    },
-                  )
-                : Container()),
-      ],
+                        widget.onSingleSelectionChanged?.call(value);
+                      },
+                      progressIndicator: widget.progressIndicator,
+                      searchViewBuilder: widget.searchViewBuilder,
+                      secondary: widget.secondary,
+                      subtitle: widget.subtitle,
+                      surfaceTintColor: widget.surfaceTintColor,
+                    ),
+            ),
+            if (widget.actions != null || showDefaultActions)
+              Divider(
+                height: 1,
+                color: widget.dividerColor,
+              ),
+            widget.actions ??
+                (showDefaultActions
+                    ? _DefaultActions(
+                        controller: _controller,
+                        multiselect: widget.multiselect,
+                        originalValue: _originalValue,
+                        onConfirm: () {
+                          {
+                            final value = _controller.value;
+                            _state?.didChange(value);
+                            widget.multiselect
+                                ? widget.onConfirmMulti?.call(value as List<T>)
+                                : widget.onConfirmSingle?.call(value as T?);
+                          }
+                        },
+                      )
+                    : Container()),
+          ],
+        ),
+      ),
     );
   }
 
   void _openBottomSheet() {
+    _SelectableListDefaultsM3 defaults = _SelectableListDefaultsM3(context);
     BottomSheetThemeData bottomSheetTheme = Theme.of(context).bottomSheetTheme;
-    double? elevation = widget.elevation ?? bottomSheetTheme.elevation;
+    double? elevation =
+        widget.elevation ?? bottomSheetTheme.elevation ?? defaults.elevation;
+    ShapeBorder shape = bottomSheetTheme.shape ?? defaults.bottomSheetShape;
 
     showModalBottomSheet(
-      backgroundColor: widget.backgroundColor,
-      elevation: elevation,
+      // backgroundColor: widget.backgroundColor,
+      // elevation: elevation,
       barrierColor: widget.barrierColor,
       barrierLabel: widget.barrierLabel,
       isDismissible: widget.barrierDismissable,
       showDragHandle: widget.bottomSheetProperties.showDragHandle,
-      // shape: widget.shape,
+      shape: widget.shape ?? shape,
       isScrollControlled: true,
       context: context,
       builder: (context) {
@@ -344,13 +397,11 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
           maxChildSize: widget.bottomSheetProperties.maxChildSize,
           expand: false,
           builder: (BuildContext context, ScrollController scrollController) {
-            return Padding(
-              padding: widget.viewPadding ?? const EdgeInsets.all(24),
-              child: _buildSelectableList(
+            return _buildSelectableList(
                 elevation: elevation,
                 showDefaultActions: true,
-              ),
-            );
+                shape: shape,
+                padding: const EdgeInsets.all(12.0));
           },
         );
       },
@@ -375,25 +426,25 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
             );
           },
       pageBuilder: (ctx, animation, _) {
+        _SelectableListDefaultsM3 defaults = _SelectableListDefaultsM3(context);
         DialogTheme dialogTheme = Theme.of(context).dialogTheme;
-        double? elevation = widget.elevation ?? dialogTheme.elevation;
+        double? elevation =
+            widget.elevation ?? dialogTheme.elevation ?? defaults.elevation;
 
         return Dialog(
           backgroundColor: widget.backgroundColor,
           elevation: elevation,
           shape: widget.shape,
-          surfaceTintColor: Theme.of(context).colorScheme.surfaceTint,
-          child: Padding(
-            padding: widget.viewPadding ?? const EdgeInsets.all(24),
-            child: SizedBox(
-              height: widget.dialogProperties.height ??
-                  MediaQuery.of(context).size.height * 0.7,
-              width: widget.dialogProperties.width ??
-                  MediaQuery.of(context).size.width * 0.7,
-              child: _buildSelectableList(
-                elevation: elevation,
-                showDefaultActions: true,
-              ),
+          // shadowColor: widget.shadowColor ?? defaults.shadowColor,
+          surfaceTintColor: widget.surfaceTintColor ?? Colors.transparent,
+          child: SizedBox(
+            height: widget.dialogProperties.height ??
+                MediaQuery.of(context).size.height * 0.7,
+            width: widget.dialogProperties.width ??
+                MediaQuery.of(context).size.width * 0.7,
+            child: _buildSelectableList(
+              elevation: elevation,
+              showDefaultActions: true,
             ),
           ),
         );
@@ -418,16 +469,15 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
         return _buildSelectableList(
           elevation: widget.elevation,
           showDefaultActions: false,
-          showDefaultHeader: widget.dropdownProperties.showDefaultHeader,
-          headerPadding: const EdgeInsets.fromLTRB(12, 4, 8, 0),
+          showDefaultHeader: false,
+          headerPadding: const EdgeInsets.fromLTRB(12, 8, 8, 0),
+          padding: EdgeInsets.zero,
         );
       },
     ).then((value) => value == null ? _handleBarrierDismissed(value) : null);
   }
 
   void _openSideSheet() {
-    _SelectableListDefaultsM3 defaults = _SelectableListDefaultsM3(context);
-
     showModalSideSheet(
       axisAlignment: widget.sideSheetProperties.axisAlignment,
       barrierColor: widget.barrierColor,
@@ -440,15 +490,11 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
       builder: (ctx) {
         return Padding(
           padding: widget.sideSheetProperties.insetPadding,
-          child: Material(
-            elevation: widget.elevation ?? defaults.elevation,
-            clipBehavior: Clip.hardEdge,
-            color: widget.backgroundColor,
-            surfaceTintColor: defaults.surfaceTintColor,
-            shape: widget.shape ?? defaults.shape,
-            child: Padding(
-              padding: widget.viewPadding ?? const EdgeInsets.all(24),
-              child: _buildSelectableList(elevation: widget.elevation),
+          child: Padding(
+            padding: widget.viewPadding ??
+                EdgeInsets.zero, // ?? const EdgeInsets.all(24),
+            child: _buildSelectableList(
+              elevation: widget.elevation,
             ),
           ),
         );
@@ -528,6 +574,186 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
                 );
               },
             ),
+    );
+  }
+}
+
+class _DefaultHeader<T> extends StatefulWidget {
+  final SelectableListController<T> controller;
+  final Color? foregroundColor;
+  final String Function(T)? itemTitle;
+  final void Function(String)? onSearchTextChanged;
+  final EdgeInsetsGeometry? padding;
+  final bool enableDefaultSearch;
+  final String? title;
+
+  const _DefaultHeader({
+    super.key,
+    required this.controller,
+    this.foregroundColor,
+    this.itemTitle,
+    this.onSearchTextChanged,
+    this.padding,
+    this.enableDefaultSearch = false,
+    this.title,
+  });
+
+  @override
+  State<_DefaultHeader<T>> createState() => __DefaultHeaderState<T>();
+}
+
+class __DefaultHeaderState<T> extends State<_DefaultHeader<T>> {
+  final FocusNode _focusNode = FocusNode();
+
+  void _search(String text) {
+    List<T> filteredItems = [];
+
+    filteredItems = widget.controller.items.where((e) {
+      String name = widget.itemTitle?.call(e) ?? e.toString();
+      return name.toLowerCase().contains(text.toLowerCase());
+    }).toList();
+
+    widget.controller.setFilteredItems(filteredItems);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    Color foregroundColor =
+        widget.foregroundColor ?? Theme.of(context).colorScheme.onSurface;
+
+    return ListenableBuilder(
+        listenable: widget.controller,
+        builder: (context, _) {
+          return Padding(
+            padding: widget.padding ?? const EdgeInsets.fromLTRB(12, 8, 12, 8),
+            child: widget.controller.searchActive
+                ? TextField(
+                    controller: widget.controller.searchController,
+                    focusNode: _focusNode,
+                    onChanged: widget.onSearchTextChanged ?? _search,
+                    decoration: InputDecoration(
+                      hintText: 'Search',
+                      contentPadding: const EdgeInsets.only(top: 12),
+                      // widget.hintStyle ??
+                      hintStyle: TextStyle(
+                        color: foregroundColor.withOpacity(0.5),
+                        fontWeight: FontWeight.w300,
+                        fontSize: 16,
+                      ),
+                      prefixIcon: IconButton(
+                        onPressed: () {
+                          widget.controller.setSearchValue("");
+                          widget.controller.setFilteredItems(null, false);
+                          widget.controller.setSearchActive(false);
+                        },
+                        icon: Icon(
+                          Icons.arrow_back,
+                          color: foregroundColor,
+                        ),
+                      ),
+                      suffixIcon: IconButton(
+                        onPressed: () {
+                          widget.controller.setSearchValue("");
+                          widget.controller.setFilteredItems(null);
+                        },
+                        icon: Icon(
+                          Icons.close,
+                          color: foregroundColor,
+                        ),
+                      ),
+                    ),
+                  )
+                : Container(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            widget.title ?? "Select",
+                            style: Theme.of(context)
+                                .textTheme
+                                .titleLarge
+                                ?.copyWith(
+                                  color: foregroundColor,
+                                ),
+                          ),
+                        ),
+                        widget.enableDefaultSearch
+                            ? IconButton(
+                                onPressed: () {
+                                  widget.controller.setSearchActive(true);
+                                  _focusNode.requestFocus();
+                                },
+                                icon: Icon(
+                                  Icons.search,
+                                  color: foregroundColor,
+                                ),
+                              )
+                            : Container(),
+                      ],
+                    ),
+                  ),
+          );
+        });
+  }
+}
+
+class _DefaultActions<T> extends StatelessWidget {
+  final SelectableListController<T> controller;
+  final List<T> originalValue;
+  final Function onConfirm;
+  final bool multiselect;
+
+  const _DefaultActions({
+    super.key,
+    required this.controller,
+    required this.multiselect,
+    required this.originalValue,
+    required this.onConfirm,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 24),
+      child: OverflowBar(
+        spacing: 8,
+        alignment: MainAxisAlignment.end,
+        // alignment: actionsAlignment ?? MainAxisAlignment.end,
+        children: [
+          TextButton(
+            onPressed: () {
+              if (controller is MultiSelectController) {
+                (controller as MultiSelectController<T>).value = originalValue;
+              } else {
+                (controller as SingleSelectController<T>).value =
+                    originalValue.isNotEmpty ? originalValue.first : null;
+              }
+              Navigator.pop(context, originalValue);
+            },
+            child: const Text("CANCEL"),
+            // child: cancelText ?? const Text("CANCEL"),
+          ),
+          TextButton(
+            onPressed: () {
+              // If single select confirmed with no value, return empty list
+              // so it doesn't get mistaken for a barrier dismissal which is
+              // represented by a `null` value and results in the value being
+              // reset if `resetOnBarrierDismissed` is true.
+              if (!multiselect && controller.value == null) {
+                Navigator.pop(context, []);
+              } else {
+                Navigator.pop(context, controller.value);
+              }
+              onConfirm();
+            },
+            child: const Text('OK'),
+            // child: confirmText ?? const Text("OK"),
+          )
+        ],
+      ),
     );
   }
 }
@@ -730,7 +956,6 @@ class DropdownProperties {
   /// Applied to the starting position of the dropdown.
   final Offset? offset;
 
-  final bool showDefaultHeader;
   final double? width;
 
   const DropdownProperties({
@@ -738,7 +963,6 @@ class DropdownProperties {
     this.anchor = true,
     this.constraints,
     this.offset,
-    this.showDefaultHeader = false,
     this.width,
   });
 }
@@ -768,72 +992,25 @@ class _SelectableListDefaultsM3 {
 
   Alignment get alignment => Alignment.center;
   double get elevation => 6.0;
+  ShapeBorder bottomSheetShape = const RoundedRectangleBorder(
+      borderRadius: BorderRadius.only(
+    topLeft: Radius.circular(28),
+    topRight: Radius.circular(28),
+  ));
   ShapeBorder get shape => const RoundedRectangleBorder(
         borderRadius: BorderRadius.all(Radius.circular(28.0)),
       );
   Color? get backgroundColor => _colors.surface;
   Color? get shadowColor => Colors.transparent;
-  Color? get surfaceTintColor => _colors.surfaceTint;
+  Color? get surfaceTintColor => Colors.transparent;
   TextStyle? get titleTextStyle => _textTheme.headlineSmall;
   TextStyle? get contentTextStyle => _textTheme.bodyMedium;
-  EdgeInsetsGeometry? get actionsPadding =>
+  EdgeInsetsGeometry get actionsPadding =>
       const EdgeInsets.only(left: 24.0, right: 24.0, bottom: 24.0);
+  EdgeInsetsGeometry get padding => const EdgeInsets.all(24.0);
 }
 
-class _DefaultActions<T> extends StatelessWidget {
-  final SelectableListController<T> controller;
-  final List<T> originalValue;
-  final Function onConfirm;
-  final bool multiselect;
-
-  const _DefaultActions({
-    super.key,
-    required this.controller,
-    required this.multiselect,
-    required this.originalValue,
-    required this.onConfirm,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 24),
-      child: OverflowBar(
-        spacing: 8,
-        alignment: MainAxisAlignment.end,
-        // alignment: actionsAlignment ?? MainAxisAlignment.end,
-        children: [
-          TextButton(
-            onPressed: () {
-              if (controller is MultiSelectController) {
-                (controller as MultiSelectController<T>).value = originalValue;
-              } else {
-                (controller as SingleSelectController<T>).value =
-                    originalValue.isNotEmpty ? originalValue.first : null;
-              }
-              Navigator.pop(context, originalValue);
-            },
-            child: const Text("CANCEL"),
-            // child: cancelText ?? const Text("CANCEL"),
-          ),
-          TextButton(
-            onPressed: () {
-              // If single select confirmed with no value, return empty list
-              // so it doesn't get mistaken for a barrier dismissal which is
-              // represented by a `null` value and results in the value being
-              // reset.
-              if (!multiselect && controller.value == null) {
-                Navigator.pop(context, []);
-              } else {
-                Navigator.pop(context, controller.value);
-              }
-              onConfirm();
-            },
-            child: const Text('OK'),
-            // child: confirmText ?? const Text("OK"),
-          )
-        ],
-      ),
-    );
-  }
-}
+typedef SelectableListAnchorBuilder<T> = Widget Function(
+  SelectableListController controller,
+  FormFieldState<T> formFieldState,
+);

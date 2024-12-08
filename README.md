@@ -1,6 +1,6 @@
 # Flutter Selectable List
 
-A widget library that simplifies building selectable lists.
+#### A practical solution to streamline building and managing the state of selectable lists.
 
 | SelectableList | SelectableListAnchor |
 | :---: | :---: |
@@ -10,24 +10,23 @@ A widget library that simplifies building selectable lists.
 ## Features
 - <b>*SelectableList*</b> - a customizable ListView
   - Single and multi select constructors
-  - Default search header
-  - Async callbacks
+  - Supports search and pagination with async callbacks
 - <b>*SelectableListController*</b> - a `ChangeNotifier` that controls the `SelectableList`.
   - Easily maintain the list of selected items from anywhere
-- <b>*SelectableListAnchor*</b> - a FormField builder widget that opens the `SelectableList` in a pop-up widget
+- <b>*SelectableListAnchor*</b> - a FormField builder widget that opens the `SelectableList` in a modal widget
   - Choose to open either a BottomSheet, Dialog, Dropdown, or SideSheet
-  - Coming soon: choose to open modal or persistent
+  - Coming soon: choose to open modal or persistent (overlay)
 
 
 ## Usage
 
 ### SelectableList
-A customizable ListView that listens to a `SelectableListController`. Instantiated with either a `single` or `multi` constructor. By default, the items are shown as a list of vertically scrollable CheckboxListTiles.
+A `CustomScrollView` that listens to a `SelectableListController`. Instantiated with either a `single` or `multi` constructor. By default, the items are shown as a list of vertically scrollable CheckboxListTiles.
 
 #### <b>Search</b>
 *Basic Search:*
 
-The simplest way to search the contents of your list is to enable the default search header with `showDefaultHeader: true` and `searchable: true`. This provides a TextField that will filter the list as the user types.
+The simplest way to search the contents of your list is to enable the default search header with `showDefaultHeader: true` and `showSearchField: true`. This provides a TextField that will filter the list as the user types.
 
 *Async Search:*
 

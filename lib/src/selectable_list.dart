@@ -4,32 +4,32 @@ import 'selectable_list_anchor.dart';
 class SelectableList<T> extends StatefulWidget {
   const SelectableList.single({
     super.key,
-    this.backgroundColor,
+    this.tileColor,
     this.checkboxShape,
     this.controlAffinity = ListTileControlAffinity.platform,
     SingleSelectController<T>? controller,
     this.dividerColor,
     this.elevation = 0.0,
-    this.header,
-    this.headerPadding,
-    this.headerTitle,
+    this.floatSelectedValue = false,
+    this.foregroundColor,
     T? initialValue,
     this.isThreeLine = false,
     this.itemBuilder,
+    this.itemExtent,
     this.items,
     this.itemTitle,
     this.scrollThreshold = 0.85,
     this.onScrollThresholdReached,
     void Function(T?)? onSelectionChanged,
     this.onSearchTextChanged,
+    this.pinSelectedValue = false,
     this.progressIndicator,
     this.scrollController,
     this.scrollDirection = Axis.vertical,
     this.searchViewBuilder,
     this.secondary,
-    this.showDefaultHeader = false,
-    this.showSearchField = false,
     this.subtitle,
+    this.surfaceTintColor,
   })  : initialValueList = null,
         initialValueSingle = initialValue,
         multiselect = false,
@@ -44,32 +44,32 @@ class SelectableList<T> extends StatefulWidget {
 
   const SelectableList.multi({
     super.key,
-    this.backgroundColor,
+    this.tileColor,
     this.checkboxShape,
     this.controlAffinity = ListTileControlAffinity.platform,
     MultiSelectController<T>? controller,
     this.dividerColor,
     this.elevation = 0.0,
-    this.header,
-    this.headerPadding,
-    this.headerTitle,
+    this.floatSelectedValue = false,
+    this.foregroundColor,
     List<T>? initialValue,
     this.isThreeLine = false,
     this.itemBuilder,
+    this.itemExtent,
     this.items,
     this.itemTitle,
     this.scrollThreshold = 0.85,
     this.onScrollThresholdReached,
     OnMultiSelectionChanged onSelectionChanged,
     this.onSearchTextChanged,
+    this.pinSelectedValue = false,
     this.progressIndicator,
     this.scrollController,
     this.scrollDirection = Axis.vertical,
     this.searchViewBuilder,
     this.secondary,
-    this.showDefaultHeader = false,
-    this.showSearchField = false,
     this.subtitle,
+    this.surfaceTintColor,
   })  : initialValueList = initialValue,
         initialValueSingle = null,
         multiselect = true,
@@ -82,7 +82,7 @@ class SelectableList<T> extends StatefulWidget {
         assert(items != null || controller != null),
         assert(scrollThreshold >= 0 && scrollThreshold <= 1);
 
-  final Color? backgroundColor;
+  final Color? tileColor;
 
   final OutlinedBorder? checkboxShape;
 
@@ -93,21 +93,34 @@ class SelectableList<T> extends StatefulWidget {
 
   final double elevation;
 
-  /// Replaces the default header.
-  final Widget? header;
+  /// {@template selectable_list_float_selected}
+  /// Pins the selected value to the top of the list. [itemExtent] is required
+  /// to enable floating effect.
+  ///
+  /// If [itemExtent] is not provided and this value is `true`, the selected
+  /// value will still be pinned but it cannot shrink while scrolling. In this
+  /// case, consider using [pinSelectedValue] which will have the same result.
+  /// {@endtemplate}
+  final bool floatSelectedValue;
 
-  final EdgeInsetsGeometry? headerPadding;
-
-  /// The default value is "Select" and the [TextStyle] uses [TextTheme.titleLarge].
-  final String? headerTitle;
+  final Color? foregroundColor;
 
   final List<T>? initialValueList;
   final T? initialValueSingle;
 
   final bool isThreeLine;
 
+  /// {@template selectable_list_item_builder}
   /// Overrides the default [CheckboxListTile].
+  /// {@endtemplate}
   final Widget Function(T item, int index)? itemBuilder;
+
+  /// {@template selectable_list_item_extent}
+  /// Providing the itemExtent will build a [SliverFixedExtentList] and is also
+  /// required to enable [floatSelectedValue].
+  /// {@endtemplate}
+  final double? itemExtent;
+
   final List<T>? items;
 
   /// Callback function to get the title of each item. Not needed if `T` is of
@@ -126,6 +139,8 @@ class SelectableList<T> extends StatefulWidget {
   final void Function(T?)? onSingleSelectionChanged;
 
   final void Function(String)? onSearchTextChanged;
+
+  final bool pinSelectedValue;
 
   /// Widget to be displayed when [SelectableListController.loading] is `true`.
   /// The position of this widget can be set using the [SelectableListController.progressIndicatorPosition].
@@ -150,14 +165,12 @@ class SelectableList<T> extends StatefulWidget {
   final Axis scrollDirection;
   final Widget Function(T)? secondary;
 
-  final bool showDefaultHeader;
-
-  /// Enables the default header's search functionality.
-  final bool showSearchField;
-
   final Widget Function(T)? subtitle;
 
   final Widget Function(TextEditingController, Widget)? searchViewBuilder;
+
+  /// Not recommended for use. See [Dialog.surfaceTintColor].
+  final Color? surfaceTintColor;
 
   @override
   State<SelectableList<T>> createState() => _SelectableListState<T>();
@@ -185,6 +198,14 @@ class _SelectableListState<T> extends State<SelectableList<T>> {
               items: widget.items,
             );
 
+    // //-------------
+    // Map<String, SelectableListItem> itemsMap = {};
+    // for (T item in _controller.items) {
+    //   String label = widget.itemTitle?.call(item) ?? item.toString();
+    //   itemsMap[label] = SelectableListItem(item, label);
+    // }
+    // //-------------
+
     _scrollController = widget.scrollController ?? ScrollController();
 
     if (widget.onScrollThresholdReached != null) {
@@ -203,7 +224,7 @@ class _SelectableListState<T> extends State<SelectableList<T>> {
       double currMaxScrollExtent = _scrollController.position.maxScrollExtent;
 
       if (_maxScrollExtent != currMaxScrollExtent) {
-        // TODO: review this
+        // review this
         // account for the progress indicator being added to the list.
         if (currMaxScrollExtent - _maxScrollExtent > 200) {
           _maxScrollExtent = currMaxScrollExtent;
@@ -223,18 +244,30 @@ class _SelectableListState<T> extends State<SelectableList<T>> {
 
   Widget _buildListItem(T item, int index) {
     return Material(
-      color: widget.backgroundColor,
-      surfaceTintColor: Theme.of(context).colorScheme.surfaceTint,
+      color: widget.tileColor,
       elevation: widget.elevation,
       shadowColor: Colors.transparent,
+      surfaceTintColor: widget.surfaceTintColor ?? Colors.transparent,
       child: CheckboxListTile(
+        side: BorderSide(
+          width: 2,
+          color:
+              widget.foregroundColor ?? Theme.of(context).colorScheme.onSurface,
+        ),
         checkboxShape: widget.checkboxShape,
+        selected: _controller.isItemChecked(item),
+        selectedTileColor: Theme.of(context).primaryColor.withOpacity(0.4),
         // tileColor: widget.backgroundColor,
         // checkColor: widget.checkColor,
         value: _controller.isItemChecked(item),
         // activeColor: widget.selectedColor
         // title: widget.itemTitle?.call(item) ?? Text(item.toString()),
-        title: Text(widget.itemTitle?.call(item) ?? item.toString()),
+        title: Text(
+          widget.itemTitle?.call(item) ?? item.toString(),
+          style: TextStyle(
+            color: widget.foregroundColor,
+          ),
+        ),
         subtitle: widget.subtitle?.call(item),
         isThreeLine: widget.isThreeLine,
         secondary: widget.secondary?.call(item),
@@ -242,11 +275,6 @@ class _SelectableListState<T> extends State<SelectableList<T>> {
         onChanged: (checked) {
           _controller.onValueChanged(item, checked ?? false);
 
-          // if (widget.separateSelectedItems) {
-          // setState(() {
-          //   _items = widget.separateSelected(_items);
-          // });
-          // }
           if (widget.multiselect) {
             widget.onMultiSelectionChanged?.call(
               _controller.value,
@@ -265,10 +293,7 @@ class _SelectableListState<T> extends State<SelectableList<T>> {
     if (!_controller.loading) return Container();
 
     return Material(
-      color: widget.backgroundColor,
-      surfaceTintColor:
-          widget.backgroundColor ?? Theme.of(context).colorScheme.surfaceTint,
-      elevation: widget.elevation,
+      color: Colors.transparent,
       shadowColor: Colors.transparent,
       child: Center(
         child: widget.progressIndicator ??
@@ -276,7 +301,10 @@ class _SelectableListState<T> extends State<SelectableList<T>> {
               margin: const EdgeInsets.symmetric(vertical: 25),
               height: 24,
               width: 24,
-              child: const CircularProgressIndicator(strokeWidth: 3),
+              child: CircularProgressIndicator(
+                strokeWidth: 3,
+                color: widget.foregroundColor,
+              ),
             ),
       ),
     );
@@ -287,17 +315,25 @@ class _SelectableListState<T> extends State<SelectableList<T>> {
     return ListenableBuilder(
         listenable: _controller,
         builder: (context, _) {
-          List items = [];
+          List<T> items = [];
           Widget? searchView;
           Widget selectableListView;
 
+          // update the _maxScrollExtent in case the list size changed
+          if (_scrollController.hasClients) {
+            _maxScrollExtent = _scrollController.position.maxScrollExtent;
+          }
+
           items = _controller.filteredItems ?? _controller.items;
 
-          selectableListView = _SelectableListView(
+          selectableListView = _SelectableListView<T>(
             buildProgressIndicator: _buildProgressIndicator,
             controller: _controller,
+            floatSelectedValue: widget.floatSelectedValue,
             itemBuilder: widget.itemBuilder ?? _buildListItem,
+            itemExtent: widget.itemExtent,
             items: items,
+            pinSelectedValue: widget.pinSelectedValue,
             scrollController: _scrollController,
             scrollDirection: widget.scrollDirection,
           );
@@ -309,79 +345,121 @@ class _SelectableListState<T> extends State<SelectableList<T>> {
             );
           }
 
-          // return searchView ?? selectableListView;
-
-          return Column(
-            children: [
-              widget.header ??
-                  (widget.showDefaultHeader
-                      ? _DefaultHeader(
-                          controller: _controller,
-                          title: widget.headerTitle,
-                          showSearchField: widget.showSearchField,
-                          onSearchTextChanged: widget.onSearchTextChanged,
-                          itemTitle: widget.itemTitle,
-                          padding: widget.headerPadding,
-                        )
-                      : Container()),
-              if (widget.showDefaultHeader || widget.header != null)
-                Divider(
-                  height: 1,
-                  color: widget.dividerColor,
-                ),
-              Expanded(child: searchView ?? selectableListView),
-            ],
-          );
+          return searchView ?? selectableListView;
         });
   }
 }
 
 class _SelectableListView<T> extends StatelessWidget {
+  final Widget Function() buildProgressIndicator;
+  final SelectableListController controller;
+  final bool floatSelectedValue;
+  final Widget Function(T item, int index) itemBuilder;
+  final double? itemExtent;
+  final List<T> items;
+  final bool pinSelectedValue;
   final ScrollController scrollController;
   final Axis scrollDirection;
-  final SelectableListController controller;
-  final List items;
-  final Widget Function(T item, int index) itemBuilder;
-  final Widget Function() buildProgressIndicator;
 
   const _SelectableListView({
     super.key,
+    required this.buildProgressIndicator,
     required this.controller,
+    this.floatSelectedValue = false,
     required this.itemBuilder,
+    this.itemExtent,
     required this.items,
+    this.pinSelectedValue = false,
     required this.scrollController,
     this.scrollDirection = Axis.vertical,
-    required this.buildProgressIndicator,
   });
+
+  Widget _itemBuilder(BuildContext context, int index) {
+    if (index == items.length) {
+      if (controller.loading &&
+          controller.progressIndicatorPosition ==
+              ProgressIndicatorPosition.listItem) {
+        return buildProgressIndicator();
+      }
+      return Container();
+    } else {
+      T item = items[index];
+      return itemBuilder(item, index);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    int itemCount = controller.loading &&
+            controller.progressIndicatorPosition ==
+                ProgressIndicatorPosition.listItem
+        ? items.length + 1
+        : items.length;
+
+    List<T> selectedItems = [];
+    if (pinSelectedValue || floatSelectedValue) {
+      if (controller is SingleSelectController) {
+        if (controller.value != null) {
+          selectedItems = [controller.value as T];
+        }
+      } else {
+        selectedItems = controller.value as List<T>;
+      }
+
+      // itemExtent present - using SliverFixedExtentList. Remove the selected
+      // items from the list since they cannot simply be hidden in this case.
+
+      // if (itemExtent != null) {
+      itemCount -= selectedItems.length;
+
+      for (T val in selectedItems) {
+        items.removeWhere((e) {
+          return e == val;
+        });
+      }
+      // }
+    }
+
     return Stack(
       children: [
-        Scrollbar(
+        CustomScrollView(
           controller: scrollController,
-          child: ListView.builder(
-              scrollDirection: scrollDirection,
-              controller: scrollController,
-              shrinkWrap: true, // should this always be true?
-              itemCount: controller.loading &&
-                      controller.progressIndicatorPosition ==
-                          ProgressIndicatorPosition.listItem
-                  ? items.length + 1
-                  : items.length,
-              itemBuilder: (context, index) {
-                if (index == items.length) {
-                  if (controller.loading &&
-                      controller.progressIndicatorPosition ==
-                          ProgressIndicatorPosition.listItem) {
-                    return buildProgressIndicator();
-                  }
-                  return Container();
-                } else {
-                  T item = items[index];
-                  return itemBuilder(item, index);
-                }
-              }),
+          scrollDirection: scrollDirection,
+          slivers: [
+            if ((pinSelectedValue || floatSelectedValue) &&
+                selectedItems.isNotEmpty)
+              itemExtent != null
+                  ? SliverPersistentHeader(
+                      delegate: _SelectedItemsHeaderDelegate(
+                        floating: floatSelectedValue,
+                        height: itemExtent!,
+                        items: selectedItems,
+                        itemBuilder: itemBuilder,
+                      ),
+                      floating: floatSelectedValue,
+                      pinned: pinSelectedValue,
+                    )
+                  : PinnedHeaderSliver(
+                      child: ListView(
+                        shrinkWrap: true,
+                        children: selectedItems
+                            .map((e) => itemBuilder(e, 0))
+                            .toList(),
+                      ),
+                    ),
+            itemExtent != null
+                ? SliverFixedExtentList.builder(
+                    itemBuilder: _itemBuilder,
+                    itemExtent: itemExtent!,
+                    itemCount: itemCount,
+                  )
+                : SliverList(
+                    delegate: SliverChildBuilderDelegate(
+                      _itemBuilder,
+                      childCount: itemCount,
+                    ),
+                  ),
+          ],
         ),
         controller.loading &&
                 controller.progressIndicatorPosition ==
@@ -401,99 +479,45 @@ enum ProgressIndicatorPosition {
 typedef OnMultiSelectionChanged<T> = void Function(
     List<T> value, T item, bool selected)?;
 
-class _DefaultHeader<T> extends StatefulWidget {
-  final SelectableListController<T> controller;
-  final String? title;
-  final String Function(T)? itemTitle;
-  final void Function(String)? onSearchTextChanged;
-  final EdgeInsetsGeometry? padding;
-  final bool showSearchField;
+class SelectableListItem<T> {
+  final T value;
+  final String label;
+  bool selected = false;
 
-  const _DefaultHeader({
-    super.key,
-    required this.controller,
-    this.title,
-    this.itemTitle,
-    this.onSearchTextChanged,
-    this.padding,
-    this.showSearchField = false,
+  SelectableListItem(this.value, this.label);
+}
+
+class _SelectedItemsHeaderDelegate<T> extends SliverPersistentHeaderDelegate {
+  bool floating;
+  final double height;
+  final Widget Function(T, int) itemBuilder;
+  final List<T> items;
+
+  _SelectedItemsHeaderDelegate({
+    this.floating = false,
+    this.height = 48.0,
+    required this.itemBuilder,
+    required this.items,
   });
 
   @override
-  State<_DefaultHeader<T>> createState() => __DefaultHeaderState<T>();
-}
-
-class __DefaultHeaderState<T> extends State<_DefaultHeader<T>> {
-  final FocusNode _focusNode = FocusNode();
-
-  void _search(String text) {
-    List<T> filteredItems = [];
-
-    filteredItems = widget.controller.items.where((e) {
-      String name = widget.itemTitle?.call(e) ?? e.toString();
-      return name.toLowerCase().contains(text.toLowerCase());
-    }).toList();
-
-    widget.controller.setFilteredItems(filteredItems);
+  Widget build(context, double shrinkOffset, bool overlapsContent) {
+    return SingleChildScrollView(
+      physics: const NeverScrollableScrollPhysics(),
+      child: Column(
+        children: items.map((e) => itemBuilder(e, 0)).toList(),
+      ),
+    );
   }
 
   @override
-  Widget build(BuildContext context) {
-    return ListenableBuilder(
-        listenable: widget.controller,
-        builder: (context, _) {
-          return Padding(
-            padding:
-                widget.padding ?? const EdgeInsets.only(bottom: 12, right: 12),
-            child: widget.controller.searchActive
-                ? TextField(
-                    controller: widget.controller.searchController,
-                    focusNode: _focusNode,
-                    onChanged: widget.onSearchTextChanged ?? _search,
-                    decoration: InputDecoration(
-                      hintText: 'Search',
-                      prefixIcon: IconButton(
-                        onPressed: () {
-                          widget.controller.setSearchValue("");
-                          widget.controller.setFilteredItems(null, false);
-                          widget.controller.setSearchActive(false);
-                        },
-                        icon: const Icon(Icons.arrow_back),
-                      ),
-                      suffixIcon: IconButton(
-                        onPressed: () {
-                          widget.controller.setSearchValue("");
-                          widget.controller.setFilteredItems(null);
-                        },
-                        icon: const Icon(Icons.close),
-                      ),
-                    ),
-                  )
-                : Container(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            widget.title ?? "Select",
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
-                        ),
-                        widget.showSearchField
-                            ? IconButton(
-                                onPressed: () {
-                                  widget.controller.setSearchActive(true);
-                                  _focusNode.requestFocus();
-                                },
-                                icon: const Icon(Icons.search),
-                              )
-                            : Container(),
-                      ],
-                    ),
-                  ),
-          );
-        });
-  }
+  double get maxExtent => height * items.length;
+
+  // The list should only shrink if floating is true. If it is false, the
+  // minExtent is set to be the same as maxExtent so that it cannot change.
+  @override
+  double get minExtent => floating ? height : height * items.length;
+
+  @override
+  bool shouldRebuild(SliverPersistentHeaderDelegate oldDelegate) => true;
 }
