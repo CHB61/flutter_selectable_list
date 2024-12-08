@@ -4,7 +4,7 @@
 
 | SelectableListAnchor |
 | :---: |
-| <img src="https://github.com/CHB61/flutter_selectable_list/blob/master/doc/anchor_example.mp4?raw=true" alt="An example video of the SelectableListAnchor" height="400"/> |
+| <video src="https://github.com/user-attachments/assets/8e863239-9177-4b06-a6ba-5d6e320d2f37" width="800" alt="An example video of the SelectableListAnchor"></video> |
 
 
 ## Features
