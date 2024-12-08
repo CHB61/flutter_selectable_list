@@ -8,7 +8,7 @@ homepage: https://github.com/CHB61/flutter_selectable_list
 
 environment:
   sdk: ^3.5.0
-  flutter: ^3.24.0
+  flutter: ">=3.24.0"
 
 dependencies:
   flutter:

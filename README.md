@@ -1,5 +1,3 @@
-# Flutter Selectable List
-
 #### A practical solution to streamline building and managing the state of selectable lists.
 
 | SelectableListAnchor |
