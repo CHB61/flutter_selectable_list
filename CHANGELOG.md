@@ -1,3 +1,7 @@
+## 0.0.7
+
+- Changes to pass pub static analysis.
+
 ## 0.0.6
 
 - Removed all of the "select" widgets (SelectableListDialog, SelectableListDropdown, SelectableListSidesheet, SelectableListBottomsheet) in favor of using the SelectableListAnchor to open each type. If not using anchor, can simply create a container for the SelectableList.
