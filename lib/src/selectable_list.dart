@@ -61,7 +61,7 @@ class SelectableList<T> extends StatefulWidget {
     this.itemTitle,
     this.scrollThreshold = 0.85,
     this.onScrollThresholdReached,
-    OnMultiSelectionChanged onSelectionChanged,
+    OnMultiSelectionChanged<T> onSelectionChanged,
     this.onSearchTextChanged,
     this.pinSelectedValue = false,
     this.progressIndicator,
@@ -130,14 +130,16 @@ class SelectableList<T> extends StatefulWidget {
   // final Widget Function(T)? itemTitle;
   final String Function(T)? itemTitle;
 
+  /// {@template selectable_list_scroll_threshold}
   /// This value is used as a percentage (which ranges from 0.0 to 1.0) of the
   /// `maxScrollExtent` to determine when to call [onScrollThresholdReached]
-  /// based on the current scroll position. The default value is `0.8`.
+  /// based on the current scroll position. The default value is `0.85`.
+  /// {@endtemplate}
   final double scrollThreshold;
 
   final bool multiselect;
 
-  final OnMultiSelectionChanged onMultiSelectionChanged;
+  final OnMultiSelectionChanged<T> onMultiSelectionChanged;
   final void Function(T?)? onSingleSelectionChanged;
 
   final void Function(String)? onSearchTextChanged;
@@ -159,7 +161,7 @@ class SelectableList<T> extends StatefulWidget {
   final MultiSelectController<T>? multiSelectController;
 
   /// Creates a listener on the [scrollController] that calls this function
-  /// when the [maxScrollThreshold] is reached. It will only be called once
+  /// when the [scrollThreshold] is reached. It will only be called once
   /// unless the `maxScrollExtent` changes.
   final Function? onScrollThresholdReached;
 
@@ -228,8 +230,7 @@ class _SelectableListState<T> extends State<SelectableList<T>> {
       double currMaxScrollExtent = _scrollController.position.maxScrollExtent;
 
       if (_maxScrollExtent != currMaxScrollExtent) {
-        // review this
-        // account for the progress indicator being added to the list.
+        // review: account for the progress indicator being added to the list
         if (currMaxScrollExtent - _maxScrollExtent > 200) {
           _maxScrollExtent = currMaxScrollExtent;
           _calledMaxExtent = false;

@@ -268,42 +268,4 @@ mixin SearchMixin<T extends StatefulWidget> on State<T> {
       ),
     );
   }
-
-  Widget _buildFilter(String title) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: InkWell(
-        onTap: () {},
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            color: Colors.blueGrey.withOpacity(0.1),
-          ),
-          padding: const EdgeInsets.symmetric(
-            vertical: 4,
-            horizontal: 8,
-          ),
-          child: Text(title),
-        ),
-      ),
-    );
-  }
-
-  Widget filtersBuilder([bool searchView = false]) {
-    return Column(
-      children: [
-        if (!searchView) const Divider(),
-        Padding(
-          padding: const EdgeInsets.all(8),
-          child: Row(
-            children: [
-              _buildFilter("Filter 1"),
-              _buildFilter("Filter 2"),
-              _buildFilter("Status"),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
 }

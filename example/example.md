@@ -5,13 +5,12 @@ import 'package:flutter_selectable_list/flutter_selectable_list.dart';
   @override
   Widget build(BuildContext context) {
     return SelectableListAnchor.multi(
-      barrierColor: Colors.transparent,
-      pinSelectedValue: true,
+      items: _companies,
+      itemTitle: (e) => e.name,
       elevation: 6,
       enableDefaultSearch: true,
       formFieldKey: _formFieldKey,
-      itemTitle: (e) => e.name,
-      items: _companies,
+      pinSelectedValue: true,
       onConfirm: (val) {
         _formFieldKey.currentState?.validate();
       },

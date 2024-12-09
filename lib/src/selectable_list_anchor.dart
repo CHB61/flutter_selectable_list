@@ -4,16 +4,151 @@ import 'modal/side_sheet.dart';
 import 'selectable_list.dart';
 
 class SelectableListAnchor<T> extends StatefulWidget {
+  const SelectableListAnchor.single({
+    super.key,
+    this.actions,
+    this.autovalidateMode = AutovalidateMode.disabled,
+    this.backgroundColor,
+    this.barrierColor = const Color(0x80000000),
+    this.barrierDismissable = true,
+    this.barrierLabel,
+    required SelectableListAnchorBuilder<T> builder,
+    this.bottomSheetProperties = const BottomSheetProperties(),
+    SingleSelectController<T>? controller,
+    this.dialogProperties = const DialogProperties(),
+    this.dividerColor,
+    this.dropdownProperties = const DropdownProperties(),
+    this.elevation,
+    this.enableDefaultSearch = false,
+    this.floatSelectedValue = false,
+    this.foregroundColor,
+    this.formFieldKey,
+    this.header,
+    this.headerTitle,
+    this.isThreeLine = false,
+    this.itemBuilder,
+    this.itemExtent,
+    this.items,
+    this.itemTitle,
+    Function(T)? onBarrierDismissed,
+    void Function(T?)? onConfirm,
+    this.onScrollThresholdReached,
+    this.onSearchTextChanged,
+    void Function(T?)? onSelectionChanged,
+    this.pinSelectedValue = false,
+    this.progressIndicator,
+    this.resetOnBarrierDismissed,
+    this.scrollThreshold = 0.85,
+    this.searchViewBuilder,
+    this.secondary,
+    this.shadowColor,
+    this.shape,
+    this.sideSheetProperties = const SideSheetProperties(),
+    this.subtitle,
+    this.surfaceTintColor,
+    this.tileColor,
+    FormFieldValidator<T>? validator,
+    Widget Function(FormFieldState<T>)? validatorBuilder,
+    this.viewPadding,
+  })  : multiselect = false,
+        multiSelectController = null,
+        multiSelectBuilder = null,
+        onBarrierDismissedMulti = null,
+        onBarrierDismissedSingle = onBarrierDismissed,
+        onConfirmMulti = null,
+        onConfirmSingle = onConfirm,
+        onMultiSelectionChanged = null,
+        onSingleSelectionChanged = onSelectionChanged,
+        singleSelectBuilder = builder,
+        singleSelectController = controller,
+        validatorMulti = null,
+        validatorSingle = validator,
+        validatorBuilderMulti = null,
+        validatorBuilderSingle = validatorBuilder,
+        assert(items == null || controller == null),
+        assert(items != null || controller != null);
+
+  const SelectableListAnchor.multi({
+    super.key,
+    this.actions,
+    this.autovalidateMode = AutovalidateMode.disabled,
+    this.backgroundColor,
+    this.barrierColor = const Color(0x80000000),
+    this.barrierDismissable = true,
+    this.barrierLabel,
+    required SelectableListAnchorBuilder<List<T>> builder,
+    this.bottomSheetProperties = const BottomSheetProperties(),
+    MultiSelectController<T>? controller,
+    this.dialogProperties = const DialogProperties(),
+    this.dividerColor,
+    this.dropdownProperties = const DropdownProperties(),
+    this.elevation,
+    this.enableDefaultSearch = false,
+    this.floatSelectedValue = false,
+    this.foregroundColor,
+    this.formFieldKey,
+    this.header,
+    this.headerTitle,
+    this.isThreeLine = false,
+    this.itemBuilder,
+    this.itemExtent,
+    this.items,
+    this.itemTitle,
+    Function(List<T>)? onBarrierDismissed,
+    void Function(List<T>)? onConfirm,
+    this.onScrollThresholdReached,
+    this.onSearchTextChanged,
+    OnMultiSelectionChanged<T> onSelectionChanged,
+    this.pinSelectedValue = false,
+    this.progressIndicator,
+    this.resetOnBarrierDismissed,
+    this.scrollThreshold = 0.85,
+    this.searchViewBuilder,
+    this.secondary,
+    this.shadowColor,
+    this.shape,
+    this.sideSheetProperties = const SideSheetProperties(),
+    this.subtitle,
+    this.surfaceTintColor,
+    this.tileColor,
+    FormFieldValidator<List<T>>? validator,
+    Widget Function(FormFieldState<List<T>>)? validatorBuilder,
+    this.viewPadding,
+  })  : multiselect = true,
+        multiSelectBuilder = builder,
+        multiSelectController = controller,
+        onBarrierDismissedMulti = onBarrierDismissed,
+        onBarrierDismissedSingle = null,
+        onConfirmMulti = onConfirm,
+        onConfirmSingle = null,
+        onMultiSelectionChanged = onSelectionChanged,
+        onSingleSelectionChanged = null,
+        singleSelectBuilder = null,
+        singleSelectController = null,
+        validatorMulti = validator,
+        validatorSingle = null,
+        validatorBuilderMulti = validatorBuilder,
+        validatorBuilderSingle = null,
+        assert(items == null || controller == null),
+        assert(items != null || controller != null);
+
   final Widget? actions;
   final AutovalidateMode autovalidateMode;
   final Color? backgroundColor;
   final Color barrierColor;
   final bool barrierDismissable;
   final String? barrierLabel;
+  final BottomSheetProperties bottomSheetProperties;
 
   final Color? dividerColor;
 
+  final DropdownProperties dropdownProperties;
+  final DialogProperties dialogProperties;
+
   final double? elevation;
+
+  /// Enables the default header's search functionality.
+  final bool enableDefaultSearch;
 
   final Key? formFieldKey;
 
@@ -55,13 +190,14 @@ class SelectableListAnchor<T> extends StatefulWidget {
   /// Callback for when scroll extent is reached.
   final Function? onScrollThresholdReached;
 
-  final OnMultiSelectionChanged onMultiSelectionChanged;
+  final OnMultiSelectionChanged<T> onMultiSelectionChanged;
 
   final void Function(String)? onSearchTextChanged;
 
   final void Function(T?)? onSingleSelectionChanged;
 
-  final FormFieldValidator<List<T>>? multiValidator;
+  final bool pinSelectedValue;
+
   // final FormFieldSetter<List<T>>? onSavedMulti;
   // final FormFieldSetter<T>? onSavedSingle;
 
@@ -69,10 +205,10 @@ class SelectableListAnchor<T> extends StatefulWidget {
   /// The position of this widget can be set using the [SelectableListController.progressIndicatorPosition].
   final Widget? progressIndicator;
 
-  final bool resetOnBarrierDismissed;
+  final bool? resetOnBarrierDismissed;
 
-  /// Enables the default header's search functionality.
-  final bool enableDefaultSearch;
+  /// {@macro selectable_list_scroll_threshold}
+  final double scrollThreshold;
 
   final Widget Function(TextEditingController, Widget)? searchViewBuilder;
 
@@ -90,139 +226,21 @@ class SelectableListAnchor<T> extends StatefulWidget {
 
   final SingleSelectController<T>? singleSelectController;
 
-  final FormFieldValidator<T>? singleValidator;
-
   /// Passed to the default [ListTile].
   final Widget Function(T)? subtitle;
-
-  final BottomSheetProperties bottomSheetProperties;
-  final DropdownProperties dropdownProperties;
-  final DialogProperties dialogProperties;
 
   final Color? surfaceTintColor;
 
   /// The ListTile color of the default list item.
   final Color? tileColor;
 
+  final FormFieldValidator<List<T>>? validatorMulti;
+  final FormFieldValidator<T>? validatorSingle;
+
+  final Widget Function(FormFieldState<T>)? validatorBuilderSingle;
+  final Widget Function(FormFieldState<List<T>>)? validatorBuilderMulti;
+
   final EdgeInsetsGeometry? viewPadding;
-
-  const SelectableListAnchor.single({
-    super.key,
-    this.actions,
-    this.autovalidateMode = AutovalidateMode.disabled,
-    this.backgroundColor,
-    this.barrierColor = const Color(0x80000000),
-    this.barrierDismissable = true,
-    this.barrierLabel,
-    required SelectableListAnchorBuilder<T> builder,
-    this.bottomSheetProperties = const BottomSheetProperties(),
-    SingleSelectController<T>? controller,
-    this.dialogProperties = const DialogProperties(),
-    this.dividerColor,
-    this.dropdownProperties = const DropdownProperties(),
-    this.elevation,
-    this.floatSelectedValue = false,
-    this.foregroundColor,
-    this.formFieldKey,
-    this.header,
-    this.headerTitle,
-    this.isThreeLine = false,
-    this.itemBuilder,
-    this.itemExtent,
-    this.items,
-    this.itemTitle,
-    Function(T)? onBarrierDismissed,
-    void Function(T?)? onConfirm,
-    this.onScrollThresholdReached,
-    this.onSearchTextChanged,
-    void Function(T?)? onSelectionChanged,
-    this.progressIndicator,
-    this.resetOnBarrierDismissed = false,
-    this.enableDefaultSearch = false,
-    this.searchViewBuilder,
-    this.secondary,
-    this.shadowColor,
-    this.shape,
-    this.sideSheetProperties = const SideSheetProperties(),
-    this.subtitle,
-    this.surfaceTintColor,
-    this.tileColor,
-    FormFieldValidator<T>? validator,
-    this.viewPadding,
-  })  : multiselect = false,
-        multiSelectController = null,
-        multiSelectBuilder = null,
-        multiValidator = null,
-        onBarrierDismissedMulti = null,
-        onBarrierDismissedSingle = onBarrierDismissed,
-        onConfirmMulti = null,
-        onConfirmSingle = onConfirm,
-        onMultiSelectionChanged = null,
-        onSingleSelectionChanged = onSelectionChanged,
-        singleSelectBuilder = builder,
-        singleSelectController = controller,
-        singleValidator = validator,
-        assert(items == null || controller == null),
-        assert(items != null || controller != null);
-
-  const SelectableListAnchor.multi({
-    super.key,
-    this.actions,
-    this.autovalidateMode = AutovalidateMode.disabled,
-    this.backgroundColor,
-    this.barrierColor = const Color(0x80000000),
-    this.barrierDismissable = true,
-    this.barrierLabel,
-    required SelectableListAnchorBuilder<List<T>> builder,
-    this.bottomSheetProperties = const BottomSheetProperties(),
-    MultiSelectController<T>? controller,
-    this.dialogProperties = const DialogProperties(),
-    this.dividerColor,
-    this.dropdownProperties = const DropdownProperties(),
-    this.elevation,
-    this.floatSelectedValue = false,
-    this.foregroundColor,
-    this.formFieldKey,
-    this.header,
-    this.headerTitle,
-    this.isThreeLine = false,
-    this.itemBuilder,
-    this.itemExtent,
-    this.items,
-    this.itemTitle,
-    Function(List<T>)? onBarrierDismissed,
-    void Function(List<T>)? onConfirm,
-    this.onScrollThresholdReached,
-    this.onSearchTextChanged,
-    OnMultiSelectionChanged onSelectionChanged,
-    this.progressIndicator,
-    this.resetOnBarrierDismissed = false,
-    this.enableDefaultSearch = false,
-    this.searchViewBuilder,
-    this.secondary,
-    this.shadowColor,
-    this.shape,
-    this.sideSheetProperties = const SideSheetProperties(),
-    this.subtitle,
-    this.surfaceTintColor,
-    this.viewPadding,
-    this.tileColor,
-    FormFieldValidator<List<T>>? validator,
-  })  : multiselect = true,
-        multiSelectBuilder = builder,
-        multiSelectController = controller,
-        multiValidator = validator,
-        onBarrierDismissedMulti = onBarrierDismissed,
-        onBarrierDismissedSingle = null,
-        onConfirmMulti = onConfirm,
-        onConfirmSingle = null,
-        onMultiSelectionChanged = onSelectionChanged,
-        onSingleSelectionChanged = null,
-        singleSelectBuilder = null,
-        singleSelectController = null,
-        singleValidator = null,
-        assert(items == null || controller == null),
-        assert(items != null || controller != null);
 
   @override
   State<SelectableListAnchor<T>> createState() =>
@@ -262,12 +280,6 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
   }) {
     _SelectableListDefaultsM3 defaults = _SelectableListDefaultsM3(context);
 
-    _originalValue = widget.multiselect
-        ? [..._controller.value]
-        : _controller.value != null
-            ? [_controller.value]
-            : [];
-
     return Material(
       color: widget.backgroundColor,
       surfaceTintColor: widget.surfaceTintColor,
@@ -298,7 +310,6 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
             Expanded(
               child: widget.multiselect
                   ? SelectableList<T>.multi(
-                      tileColor: widget.tileColor ?? widget.backgroundColor,
                       controller: _controller as MultiSelectController<T>,
                       dividerColor: widget.dividerColor,
                       elevation: elevation ?? defaults.elevation,
@@ -315,11 +326,14 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
                         widget.onMultiSelectionChanged
                             ?.call(values, item, checked);
                       },
+                      pinSelectedValue: widget.pinSelectedValue,
                       progressIndicator: widget.progressIndicator,
+                      scrollThreshold: widget.scrollThreshold,
                       searchViewBuilder: widget.searchViewBuilder,
                       secondary: widget.secondary,
                       subtitle: widget.subtitle,
                       surfaceTintColor: widget.surfaceTintColor,
+                      tileColor: widget.tileColor ?? widget.backgroundColor,
                     )
                   : SelectableList<T>.single(
                       tileColor: widget.tileColor ?? widget.backgroundColor,
@@ -338,7 +352,9 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
                         _state?.didChange(value);
                         widget.onSingleSelectionChanged?.call(value);
                       },
+                      pinSelectedValue: widget.pinSelectedValue,
                       progressIndicator: widget.progressIndicator,
+                      scrollThreshold: widget.scrollThreshold,
                       searchViewBuilder: widget.searchViewBuilder,
                       secondary: widget.secondary,
                       subtitle: widget.subtitle,
@@ -380,6 +396,8 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
         widget.elevation ?? bottomSheetTheme.elevation ?? defaults.elevation;
     ShapeBorder shape = bottomSheetTheme.shape ?? defaults.bottomSheetShape;
 
+    _cacheOriginalValue();
+
     showModalBottomSheet(
       // backgroundColor: widget.backgroundColor,
       // elevation: elevation,
@@ -409,6 +427,8 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
   }
 
   void _openDialog() {
+    _cacheOriginalValue();
+
     showGeneralDialog(
       context: context,
       barrierColor: widget.barrierColor,
@@ -449,6 +469,8 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
   }
 
   void _openDropdown() {
+    _cacheOriginalValue();
+
     showModalDropdown(
       alignment: widget.dropdownProperties.alignment,
       anchorKey: widget.dropdownProperties.anchor ? _anchorKey : null,
@@ -464,16 +486,19 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
       builder: (ctx) {
         return _buildSelectableList(
           elevation: widget.elevation,
-          showDefaultActions: false,
-          showDefaultHeader: false,
           headerPadding: const EdgeInsets.fromLTRB(12, 8, 8, 0),
           padding: EdgeInsets.zero,
+          showDefaultActions: false,
+          showDefaultHeader: false,
         );
       },
-    ).then((value) => value == null ? _handleBarrierDismissed(value) : null);
+    ).then((value) =>
+        value == null ? _handleBarrierDismissed(value, false) : null);
   }
 
   void _openSideSheet() {
+    _cacheOriginalValue();
+
     showModalSideSheet(
       axisAlignment: widget.sideSheetProperties.axisAlignment,
       barrierColor: widget.barrierColor,
@@ -498,6 +523,14 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
     ).then((value) => value == null ? _handleBarrierDismissed(value) : null);
   }
 
+  _cacheOriginalValue() {
+    _originalValue = widget.multiselect
+        ? [..._controller.value]
+        : _controller.value != null
+            ? [_controller.value]
+            : [];
+  }
+
   // Called when the barrier is dismissed to reset the controller.value.
   // Dropdown is an exception since it doesn't have default `actions`, therefore
   // tapping the barrier is not considered a 'cancel' action.
@@ -508,16 +541,53 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
       (_controller as SingleSelectController<T>).value =
           originalValue.isNotEmpty ? originalValue.first : null;
     }
+    _state?.didChange(_controller.value);
   }
 
-  void _handleBarrierDismissed(dynamic value) {
-    if (widget.resetOnBarrierDismissed) {
+  void _handleBarrierDismissed(
+    dynamic value, [
+    bool resetOnBarrierDismissed = true,
+  ]) {
+    if (widget.resetOnBarrierDismissed ?? resetOnBarrierDismissed) {
       _resetValue(_originalValue);
     }
 
     widget.multiselect
         ? widget.onBarrierDismissedMulti?.call(value)
         : widget.onBarrierDismissedSingle?.call(value);
+  }
+
+  Widget _buildFormField(Widget field, FormFieldState state) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        field,
+        _buildValidation(state),
+      ],
+    );
+  }
+
+  Widget _buildValidation(FormFieldState state) {
+    if (widget.multiselect) {
+      if (widget.validatorBuilderMulti != null) {
+        return widget.validatorBuilderMulti!(state as FormFieldState<List<T>>);
+      }
+    } else {
+      if (widget.validatorBuilderSingle != null) {
+        return widget.validatorBuilderSingle!(state as FormFieldState<T>);
+      }
+    }
+
+    return state.hasError
+        ? Text(
+            state.errorText ?? "",
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.error,
+              fontSize: 12,
+            ),
+          )
+        : Container();
   }
 
   @override
@@ -530,30 +600,14 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
               // initialValue: widget.initialValueList,
               key: widget.formFieldKey,
               // onSaved: widget.onSavedMulti,
-              validator: widget.multiValidator,
+              validator: widget.validatorMulti,
               builder: (state) {
                 _state ??= state;
-                return widget.multiSelectBuilder!(
+                Widget field = widget.multiSelectBuilder!(
                   _controller as MultiSelectController<T>,
                   state,
                 );
-                // return Column(
-                //   crossAxisAlignment: CrossAxisAlignment.start,
-                //   mainAxisSize: MainAxisSize.min,
-                //   children: [
-                //     widget.multiSelectBuilder!(
-                //       _controller as MultiSelectController<T>,
-                //       state,
-                //     ),
-                //     state.hasError
-                //         ? Text(
-                //             state.errorText ?? "",
-                //             style: const TextStyle(
-                //                 color: Colors.red, fontSize: 12),
-                //           )
-                //         : const Text(''),
-                //   ],
-                // );
+                return _buildFormField(field, state);
               },
             )
           : FormField<T>(
@@ -561,13 +615,14 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
               // initialValue: widget.initialValueSingle,
               key: widget.formFieldKey,
               // onSaved: widget.onSavedSingle,
-              validator: widget.singleValidator,
+              validator: widget.validatorSingle,
               builder: (state) {
                 _state ??= state;
-                return widget.singleSelectBuilder!(
+                Widget field = widget.singleSelectBuilder!(
                   _controller as SingleSelectController<T>,
                   state,
                 );
+                return _buildFormField(field, state);
               },
             ),
     );
@@ -632,7 +687,7 @@ class __DefaultHeaderState<T> extends State<_DefaultHeader<T>> {
                       contentPadding: const EdgeInsets.only(top: 12),
                       // widget.hintStyle ??
                       hintStyle: TextStyle(
-                        color: foregroundColor.withOpacity(0.5),
+                        color: foregroundColor.withAlpha(100),
                         fontWeight: FontWeight.w300,
                         fontSize: 16,
                       ),

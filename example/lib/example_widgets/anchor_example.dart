@@ -11,17 +11,22 @@ class AnchorExample extends StatefulWidget {
 }
 
 class _AnchorExampleState extends State<AnchorExample> {
+  final SingleSelectController<Company> _controller = SingleSelectController();
+  final TextEditingController _textController = TextEditingController();
   final GlobalKey<FormFieldState> _formFieldKey = GlobalKey<FormFieldState>();
   final DataService _dataService = DataService();
-  late final List<Company> _companies;
-  // final MultiSelectController<Company> _controller = MultiSelectController();
 
   @override
   void initState() {
     super.initState();
+    _getData();
+  }
 
-    _companies = _dataService.getData();
-    // _controller.setItems(_companies);
+  Future<void> _getData() async {
+    _controller.setLoading(true);
+    List<Company> companies = await _dataService.getDataAsync(delay: 1000);
+    _controller.setLoading(false);
+    _controller.setItems(companies);
   }
 
   @override
@@ -29,59 +34,71 @@ class _AnchorExampleState extends State<AnchorExample> {
     return Center(
       child: SizedBox(
         width: 400,
-        child: SelectableListAnchor.multi(
+        child: SelectableListAnchor.single(
+          controller: _controller,
           barrierColor: Colors.transparent,
-          itemExtent: 48,
-          floatSelectedValue: true,
-          elevation: 6,
           enableDefaultSearch: true,
           formFieldKey: _formFieldKey,
           itemTitle: (e) => e.name,
-          items: _companies,
-          onConfirm: (val) {
+          pinSelectedValue: true,
+          onSelectionChanged: (item) {
             _formFieldKey.currentState?.validate();
+            _textController.text = item?.name ?? "";
+            Navigator.of(context).pop(item);
           },
-          autovalidateMode: AutovalidateMode.always,
-          // validator: (value) {
-          //   if (value?.isEmpty ?? true) return 'Required';
-          //   return null;
-          // },
+          validator: (value) {
+            if (value == null) return 'Required';
+            return null;
+          },
           builder: (controller, state) {
-            return TextButton(
-              onPressed: () async {
-                controller.openDropdown();
-                await Future.delayed(const Duration(milliseconds: 500));
-                controller.openSideSheet();
-                await Future.delayed(const Duration(milliseconds: 500));
-                controller.openDialog();
-                await Future.delayed(const Duration(milliseconds: 500));
-                controller.openBottomSheet();
-              },
-              child: const Text('Open view'),
+            return ExampleAnchorField(
+              controller: controller,
+              textController: _textController,
+              onPressed: () => controller.openDropdown(),
+              label: "Open View (Dropdown)",
+              state: state,
             );
-            // return Column(
-            //   mainAxisSize: MainAxisSize.min,
-            //   crossAxisAlignment: CrossAxisAlignment.start,
-            //   children: [
-            //     TextButton(
-            //       onPressed: () {
-            //         controller.openView();
-            //       },
-            //       child: Container(
-            //         alignment: Alignment.center,
-            //         width: 200,
-            //         child: const Text('Open view'),
-            //       ),
-            //     ),
-            //     state.hasError
-            //         ? Text(
-            //             state.errorText ?? "",
-            //             style: const TextStyle(color: Colors.red, fontSize: 12),
-            //           )
-            //         : Container(),
-            //   ],
-            // );
           },
+        ),
+      ),
+    );
+  }
+}
+
+class ExampleAnchorField extends StatelessWidget {
+  final SelectableListController controller;
+  final String label;
+  final VoidCallback onPressed;
+  final FormFieldState state;
+  final TextEditingController textController;
+
+  const ExampleAnchorField({
+    super.key,
+    required this.controller,
+    required this.label,
+    required this.onPressed,
+    required this.state,
+    required this.textController,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 16.0),
+      child: TextFormField(
+        canRequestFocus: false,
+        controller: textController,
+        mouseCursor: SystemMouseCursors.click,
+        onTap: onPressed,
+        decoration: InputDecoration(
+          hintText: label,
+          enabledBorder: OutlineInputBorder(
+            borderSide: BorderSide(
+              color: state.hasError
+                  ? Theme.of(context).colorScheme.error
+                  : Colors.black87,
+            ),
+          ),
         ),
       ),
     );

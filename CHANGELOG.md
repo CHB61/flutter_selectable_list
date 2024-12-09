@@ -1,3 +1,8 @@
+## 0.0.8
+
+- SelectableListAnchor
+	- Added section below the builder widget to display error text.
+
 ## 0.0.7
 
 - Changes to pass pub static analysis.
