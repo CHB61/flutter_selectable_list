@@ -168,7 +168,7 @@ class DropdownRoute<T> extends PopupRoute<T> {
       color: backgroundColor ?? defaults.backgroundColor,
       surfaceTintColor: defaults.surfaceTintColor,
       shadowColor: defaults.shadowColor,
-      shape: shape ?? defaults.shape,
+      shape: shape,
       child: ConstrainedBox(
         constraints: constraints ?? BoxConstraints(maxHeight: maxHeight),
         child: SizeTransition(
@@ -217,8 +217,6 @@ class _DropdownDefaultsM3 {
 
   Alignment get alignment => Alignment.center;
   double get elevation => 6.0;
-  ShapeBorder get shape => const RoundedRectangleBorder(
-      borderRadius: BorderRadius.all(Radius.circular(28.0)));
   Color? get backgroundColor => _colors.surface;
   Color? get shadowColor => Theme.of(context).shadowColor;
   Color? get surfaceTintColor => _colors.surfaceTint;

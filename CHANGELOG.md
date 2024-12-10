@@ -1,3 +1,8 @@
+## 0.0.9
+
+- Fixed anchor dropdown not applying shape.
+- Fixed null always being returned from onBarrierDismissed.
+
 ## 0.0.8
 
 - SelectableListAnchor
@@ -10,7 +15,6 @@
 ## 0.0.6
 
 - Removed all of the "select" widgets (SelectableListDialog, SelectableListDropdown, SelectableListSidesheet, SelectableListBottomsheet) in favor of using the SelectableListAnchor to open each type. If not using anchor, can simply create a container for the SelectableList.
-- changed name of `searchable` to `enableDefaultSearch`
 - SelectableList
 	- changed elevation to be non-nullable with default value of 0.0
 	- changed surfaceTintColor to have a default value of null

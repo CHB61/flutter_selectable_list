@@ -30,7 +30,7 @@ class SelectableListAnchor<T> extends StatefulWidget {
     this.itemExtent,
     this.items,
     this.itemTitle,
-    Function(T)? onBarrierDismissed,
+    Function(T?)? onBarrierDismissed,
     void Function(T?)? onConfirm,
     this.onScrollThresholdReached,
     this.onSearchTextChanged,
@@ -181,7 +181,7 @@ class SelectableListAnchor<T> extends StatefulWidget {
       multiSelectBuilder;
   final MultiSelectController<T>? multiSelectController;
 
-  final Function(T originalValue)? onBarrierDismissedSingle;
+  final Function(T? originalValue)? onBarrierDismissedSingle;
   final Function(List<T> originalValue)? onBarrierDismissedMulti;
 
   final void Function(T?)? onConfirmSingle;
@@ -423,7 +423,7 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
           },
         );
       },
-    ).then((value) => value == null ? _handleBarrierDismissed(value) : null);
+    ).then((value) => value == null ? _handleBarrierDismissed() : null);
   }
 
   void _openDialog() {
@@ -446,14 +446,7 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
             );
           },
       pageBuilder: (ctx, animation, _) {
-        _SelectableListDefaultsM3 defaults = _SelectableListDefaultsM3(context);
-
         return Dialog(
-          backgroundColor: widget.backgroundColor,
-          elevation: widget.elevation ?? defaults.elevation,
-          shape: widget.shape,
-          // shadowColor: widget.shadowColor ?? defaults.shadowColor,
-          surfaceTintColor: widget.surfaceTintColor ?? Colors.transparent,
           child: SizedBox(
             height: widget.dialogProperties.height ??
                 MediaQuery.of(context).size.height * 0.7,
@@ -465,11 +458,13 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
           ),
         );
       },
-    ).then((value) => value == null ? _handleBarrierDismissed(value) : null);
+    ).then((value) => value == null ? _handleBarrierDismissed() : null);
   }
 
   void _openDropdown() {
     _cacheOriginalValue();
+
+    _SelectableListDefaultsM3 defaults = _SelectableListDefaultsM3(context);
 
     showModalDropdown(
       alignment: widget.dropdownProperties.alignment,
@@ -482,6 +477,7 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
       constraints: widget.dropdownProperties.constraints,
       elevation: widget.elevation,
       offset: widget.dropdownProperties.offset,
+      shape: widget.shape ?? defaults.shape,
       width: widget.dropdownProperties.width,
       builder: (ctx) {
         return _buildSelectableList(
@@ -492,8 +488,9 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
           showDefaultHeader: false,
         );
       },
-    ).then((value) =>
-        value == null ? _handleBarrierDismissed(value, false) : null);
+    ).then((value) => value == null
+        ? _handleBarrierDismissed(resetOnBarrierDismissed: false)
+        : null);
   }
 
   void _openSideSheet() {
@@ -520,7 +517,7 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
           ),
         );
       },
-    ).then((value) => value == null ? _handleBarrierDismissed(value) : null);
+    ).then((value) => value == null ? _handleBarrierDismissed() : null);
   }
 
   _cacheOriginalValue() {
@@ -544,17 +541,16 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
     _state?.didChange(_controller.value);
   }
 
-  void _handleBarrierDismissed(
-    dynamic value, [
+  void _handleBarrierDismissed({
     bool resetOnBarrierDismissed = true,
-  ]) {
+  }) {
     if (widget.resetOnBarrierDismissed ?? resetOnBarrierDismissed) {
       _resetValue(_originalValue);
     }
 
     widget.multiselect
-        ? widget.onBarrierDismissedMulti?.call(value)
-        : widget.onBarrierDismissedSingle?.call(value);
+        ? widget.onBarrierDismissedMulti?.call(_controller.value)
+        : widget.onBarrierDismissedSingle?.call(_controller.value);
   }
 
   Widget _buildFormField(Widget field, FormFieldState state) {

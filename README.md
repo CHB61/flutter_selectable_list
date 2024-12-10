@@ -45,14 +45,13 @@ A ChangeNotifier that maintains the list of items and its selected value. It con
 Can be used as a listenable for custom widgets. For example: 
 - to display the selected value of a SelectableList elsewhere in the UI
 - custom header that contains a search or filter
-- custom widget to display the list in a unique way (wrap, grid, etc.)
 
 ### SelectableListAnchor
 A builder widget used to open the SelectableList in a modal widget (BottomSheet, Dialog, Dropdown, or SideSheet).
 
 This widget is also a FormField, providing validation and other standard FormField features. The error text displayed below the `builder` widget of the anchor can be replaced by passing in the `validatorBuilder`.
 
-To allow for the value to be reset in the event of a cancel or barrier dismissal, the original value is stored in the SelectableListAnchor state each time the view is opened. Unless `resetOnBarrierDismissed` is specified, the default behavior for all modal widgets except for dropdown is to reset. Some modal widgets have a different default behavior than others - the dropdown doesn't show the default header or actions unless specified, and it is assumed the barrier dismiss shouldn't be considered a 'cancel' action and reset the value.
+To allow for the value to be reset in the event of a cancel or barrier dismissal, the original value is stored in the SelectableListAnchor state each time the view is opened. `resetOnBarrierDismissed` can be used to override the default behavior. Modal widgets do not all have the same default behavior - the dropdown doesn't show the default header or actions unless specified, and it is assumed the barrier dismiss shouldn't be considered a 'cancel' action and reset the value.
 
 Properties specific to a certain modal widget can be specified with the respective parameter. For example, if the anchor is opening a SideSheet, the parameter `sideSheetProperties` can be provided.
 
