@@ -43,6 +43,7 @@ class SelectableListAnchor<T> extends StatefulWidget {
     this.secondary,
     this.shadowColor,
     this.shape,
+    this.shrinkWrap = false,
     this.sideSheetProperties = const SideSheetProperties(),
     this.subtitle,
     this.surfaceTintColor,
@@ -107,6 +108,7 @@ class SelectableListAnchor<T> extends StatefulWidget {
     this.secondary,
     this.shadowColor,
     this.shape,
+    this.shrinkWrap = false,
     this.sideSheetProperties = const SideSheetProperties(),
     this.subtitle,
     this.surfaceTintColor,
@@ -218,6 +220,8 @@ class SelectableListAnchor<T> extends StatefulWidget {
   final Color? shadowColor;
 
   final ShapeBorder? shape;
+
+  final bool shrinkWrap;
 
   final SideSheetProperties sideSheetProperties;
 
@@ -331,6 +335,7 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
                       scrollThreshold: widget.scrollThreshold,
                       searchViewBuilder: widget.searchViewBuilder,
                       secondary: widget.secondary,
+                      shrinkWrap: widget.shrinkWrap,
                       subtitle: widget.subtitle,
                       surfaceTintColor: widget.surfaceTintColor,
                       tileColor: widget.tileColor ?? widget.backgroundColor,
@@ -357,6 +362,7 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
                       scrollThreshold: widget.scrollThreshold,
                       searchViewBuilder: widget.searchViewBuilder,
                       secondary: widget.secondary,
+                      shrinkWrap: widget.shrinkWrap,
                       subtitle: widget.subtitle,
                       surfaceTintColor: widget.surfaceTintColor,
                     ),

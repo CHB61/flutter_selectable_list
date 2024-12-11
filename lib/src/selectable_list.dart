@@ -29,6 +29,7 @@ class SelectableList<T> extends StatefulWidget {
     this.searchViewBuilder,
     this.secondary,
     this.selectedTileColor,
+    this.shrinkWrap = false,
     this.subtitle,
     this.surfaceTintColor,
   })  : initialValueList = null,
@@ -70,6 +71,7 @@ class SelectableList<T> extends StatefulWidget {
     this.searchViewBuilder,
     this.secondary,
     this.selectedTileColor,
+    this.shrinkWrap = false,
     this.subtitle,
     this.surfaceTintColor,
   })  : initialValueList = initialValue,
@@ -170,6 +172,8 @@ class SelectableList<T> extends StatefulWidget {
   final Widget Function(T)? secondary;
 
   final Color? selectedTileColor;
+
+  final bool shrinkWrap;
 
   final Widget Function(T)? subtitle;
 
@@ -342,6 +346,7 @@ class _SelectableListState<T> extends State<SelectableList<T>> {
             pinSelectedValue: widget.pinSelectedValue,
             scrollController: _scrollController,
             scrollDirection: widget.scrollDirection,
+            shrinkWrap: widget.shrinkWrap,
           );
 
           if (_controller.searchActive) {
@@ -366,6 +371,7 @@ class _SelectableListView<T> extends StatelessWidget {
   final bool pinSelectedValue;
   final ScrollController scrollController;
   final Axis scrollDirection;
+  final bool shrinkWrap;
 
   const _SelectableListView({
     super.key,
@@ -378,6 +384,7 @@ class _SelectableListView<T> extends StatelessWidget {
     this.pinSelectedValue = false,
     required this.scrollController,
     this.scrollDirection = Axis.vertical,
+    this.shrinkWrap = false,
   });
 
   Widget _itemBuilder(BuildContext context, int index) {
@@ -431,6 +438,7 @@ class _SelectableListView<T> extends StatelessWidget {
         CustomScrollView(
           controller: scrollController,
           scrollDirection: scrollDirection,
+          shrinkWrap: shrinkWrap,
           slivers: [
             if ((pinSelectedValue || floatSelectedValue) &&
                 selectedItems.isNotEmpty)
