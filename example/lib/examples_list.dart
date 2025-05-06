@@ -1,8 +1,9 @@
 import 'package:example/example_widgets/anchor_example.dart';
 import 'package:example/example_widgets/bottom_sheet_example.dart';
 import 'package:example/example_widgets/dialog_example.dart';
-import 'package:example/example_widgets/dropdown_example.dart';
 import 'package:example/example_widgets/infinite_scroll_example.dart';
+import 'package:example/example_widgets/overlay_anchor_example.dart';
+import 'package:example/example_widgets/overlay_example.dart';
 import 'package:example/example_widgets/search/async_search_example.dart';
 import 'package:example/example_widgets/search/basic_search_example.dart';
 import 'package:example/example_widgets/search/custom_search_header_example.dart';
@@ -33,24 +34,6 @@ class _ExamplesListState extends State<ExamplesList> {
         widget: const AnchorExample(),
       ),
     ),
-    // ExampleItem(
-    //   example: Example(
-    //     name: 'Bottom Sheet',
-    //     widget: const BottomSheetExample(),
-    //   ),
-    // ),
-    // ExampleItem(
-    //   example: Example(
-    //     name: 'Dialog',
-    //     widget: const DialogExample(),
-    //   ),
-    // ),
-    // ExampleItem(
-    //   example: Example(
-    //     name: 'Dropdown',
-    //     widget: const DropdownExample(),
-    //   ),
-    // ),
     ExampleItem(
       example: Example(
         name: 'Infinite Scroll',
@@ -63,9 +46,15 @@ class _ExamplesListState extends State<ExamplesList> {
         examples: [
           Example(name: 'Bottom Sheet', widget: const BottomSheetExample()),
           Example(name: 'Dialog', widget: const DialogExample()),
-          Example(name: 'Dropdown', widget: const DropdownExample()),
+          Example(name: 'Overlay', widget: const OverlayAnchorExample()),
           Example(name: 'Side Sheet', widget: const SideSheetExample()),
         ],
+      ),
+    ),
+    ExampleItem(
+      example: Example(
+        name: 'Overlay',
+        widget: const OverlayExample(),
       ),
     ),
     ExampleItem(

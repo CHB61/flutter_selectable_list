@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'modal/dropdown.dart';
-import 'modal/side_sheet.dart';
+import 'package:flutter_selectable_list/src/overlay/overlay_anchor.dart';
+import 'side_sheet/side_sheet.dart';
 import 'selectable_list.dart';
 
 class SelectableListAnchor<T> extends StatefulWidget {
@@ -13,11 +13,8 @@ class SelectableListAnchor<T> extends StatefulWidget {
     this.barrierDismissable = true,
     this.barrierLabel,
     required SelectableListAnchorBuilder<T> builder,
-    this.bottomSheetProperties = const BottomSheetProperties(),
     SingleSelectController<T>? controller,
-    this.dialogProperties = const DialogProperties(),
     this.dividerColor,
-    this.dropdownProperties = const DropdownProperties(),
     this.elevation,
     this.enableDefaultSearch = false,
     this.floatSelectedValue = false,
@@ -38,13 +35,13 @@ class SelectableListAnchor<T> extends StatefulWidget {
     this.pinSelectedValue = false,
     this.progressIndicator,
     this.resetOnBarrierDismissed,
+    this.scrollDirection = Axis.vertical,
     this.scrollThreshold = 0.85,
     this.searchViewBuilder,
     this.secondary,
     this.shadowColor,
     this.shape,
     this.shrinkWrap = false,
-    this.sideSheetProperties = const SideSheetProperties(),
     this.subtitle,
     this.surfaceTintColor,
     this.tileColor,
@@ -78,11 +75,8 @@ class SelectableListAnchor<T> extends StatefulWidget {
     this.barrierDismissable = true,
     this.barrierLabel,
     required SelectableListAnchorBuilder<List<T>> builder,
-    this.bottomSheetProperties = const BottomSheetProperties(),
     MultiSelectController<T>? controller,
-    this.dialogProperties = const DialogProperties(),
     this.dividerColor,
-    this.dropdownProperties = const DropdownProperties(),
     this.elevation,
     this.enableDefaultSearch = false,
     this.floatSelectedValue = false,
@@ -103,13 +97,13 @@ class SelectableListAnchor<T> extends StatefulWidget {
     this.pinSelectedValue = false,
     this.progressIndicator,
     this.resetOnBarrierDismissed,
+    this.scrollDirection = Axis.vertical,
     this.scrollThreshold = 0.85,
     this.searchViewBuilder,
     this.secondary,
     this.shadowColor,
     this.shape,
     this.shrinkWrap = false,
-    this.sideSheetProperties = const SideSheetProperties(),
     this.subtitle,
     this.surfaceTintColor,
     this.tileColor,
@@ -140,12 +134,8 @@ class SelectableListAnchor<T> extends StatefulWidget {
   final Color barrierColor;
   final bool barrierDismissable;
   final String? barrierLabel;
-  final BottomSheetProperties bottomSheetProperties;
 
   final Color? dividerColor;
-
-  final DropdownProperties dropdownProperties;
-  final DialogProperties dialogProperties;
 
   final double? elevation;
 
@@ -190,7 +180,7 @@ class SelectableListAnchor<T> extends StatefulWidget {
   final void Function(List<T>)? onConfirmMulti;
 
   /// Callback for when scroll extent is reached.
-  final Function? onScrollThresholdReached;
+  final Function(SelectableListController)? onScrollThresholdReached;
 
   final OnMultiSelectionChanged<T> onMultiSelectionChanged;
 
@@ -209,6 +199,8 @@ class SelectableListAnchor<T> extends StatefulWidget {
 
   final bool? resetOnBarrierDismissed;
 
+  final Axis scrollDirection;
+
   /// {@macro selectable_list_scroll_threshold}
   final double scrollThreshold;
 
@@ -222,8 +214,6 @@ class SelectableListAnchor<T> extends StatefulWidget {
   final ShapeBorder? shape;
 
   final bool shrinkWrap;
-
-  final SideSheetProperties sideSheetProperties;
 
   final Widget Function(SingleSelectController<T>, FormFieldState<T>)?
       singleSelectBuilder;
@@ -251,7 +241,8 @@ class SelectableListAnchor<T> extends StatefulWidget {
       _SelectableListAnchorState<T>();
 }
 
-class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
+class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>>
+    with SingleTickerProviderStateMixin {
   final GlobalKey _anchorKey = GlobalKey();
   late final SelectableListController<T> _controller;
   FormFieldState? _state;
@@ -272,6 +263,18 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
             );
 
     _controller._anchor = this;
+
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    _overlayEntry?.dispose();
+    super.dispose();
   }
 
   Widget _buildSelectableList({
@@ -285,6 +288,7 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
     _SelectableListDefaultsM3 defaults = _SelectableListDefaultsM3(context);
 
     return Material(
+      clipBehavior: Clip.antiAlias,
       color: widget.backgroundColor,
       surfaceTintColor: widget.surfaceTintColor,
       elevation: widget.elevation ?? defaults.elevation,
@@ -293,6 +297,7 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
       child: Padding(
         padding: widget.viewPadding ?? padding ?? defaults.padding,
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             widget.header ??
                 (showDefaultHeader
@@ -311,7 +316,9 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
                 height: 1,
                 color: widget.dividerColor,
               ),
-            Expanded(
+            ConditionalParentWidget(
+              condition: !widget.shrinkWrap,
+              parentBuilder: (child) => Expanded(child: child),
               child: widget.multiselect
                   ? SelectableList<T>.multi(
                       controller: _controller as MultiSelectController<T>,
@@ -324,7 +331,6 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
                       itemExtent: widget.itemExtent,
                       itemTitle: widget.itemTitle,
                       onScrollThresholdReached: widget.onScrollThresholdReached,
-                      onSearchTextChanged: widget.onSearchTextChanged,
                       onSelectionChanged: (values, item, checked) {
                         _state?.didChange(values);
                         widget.onMultiSelectionChanged
@@ -332,6 +338,7 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
                       },
                       pinSelectedValue: widget.pinSelectedValue,
                       progressIndicator: widget.progressIndicator,
+                      scrollDirection: widget.scrollDirection,
                       scrollThreshold: widget.scrollThreshold,
                       searchViewBuilder: widget.searchViewBuilder,
                       secondary: widget.secondary,
@@ -352,13 +359,13 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
                       itemExtent: widget.itemExtent,
                       itemTitle: widget.itemTitle,
                       onScrollThresholdReached: widget.onScrollThresholdReached,
-                      onSearchTextChanged: widget.onSearchTextChanged,
                       onSelectionChanged: (value) {
                         _state?.didChange(value);
                         widget.onSingleSelectionChanged?.call(value);
                       },
                       pinSelectedValue: widget.pinSelectedValue,
                       progressIndicator: widget.progressIndicator,
+                      scrollDirection: widget.scrollDirection,
                       scrollThreshold: widget.scrollThreshold,
                       searchViewBuilder: widget.searchViewBuilder,
                       secondary: widget.secondary,
@@ -395,7 +402,12 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
     );
   }
 
-  void _openBottomSheet() {
+  void _openBottomSheet({
+    final double initialChildSize = 0.5,
+    final double minChildSize = 0.25,
+    final double maxChildSize = 1.0,
+    final bool? showDragHandle,
+  }) {
     _SelectableListDefaultsM3 defaults = _SelectableListDefaultsM3(context);
     BottomSheetThemeData bottomSheetTheme = Theme.of(context).bottomSheetTheme;
     double? elevation =
@@ -410,15 +422,15 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
       barrierColor: widget.barrierColor,
       barrierLabel: widget.barrierLabel,
       isDismissible: widget.barrierDismissable,
-      showDragHandle: widget.bottomSheetProperties.showDragHandle,
+      showDragHandle: showDragHandle,
       shape: widget.shape ?? shape,
       isScrollControlled: true,
       context: context,
       builder: (context) {
         return DraggableScrollableSheet(
-          initialChildSize: widget.bottomSheetProperties.initialChildSize,
-          minChildSize: widget.bottomSheetProperties.minChildSize,
-          maxChildSize: widget.bottomSheetProperties.maxChildSize,
+          initialChildSize: initialChildSize,
+          minChildSize: minChildSize,
+          maxChildSize: maxChildSize,
           expand: false,
           builder: (BuildContext context, ScrollController scrollController) {
             return _buildSelectableList(
@@ -432,7 +444,11 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
     ).then((value) => value == null ? _handleBarrierDismissed() : null);
   }
 
-  void _openDialog() {
+  void _openDialog({
+    final RouteTransitionsBuilder? transitionBuilder,
+    final double? height,
+    final double? width,
+  }) {
     _cacheOriginalValue();
 
     showGeneralDialog(
@@ -441,7 +457,7 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
       barrierDismissible: widget.barrierDismissable,
       barrierLabel: widget.barrierLabel ?? '',
       transitionDuration: const Duration(milliseconds: 250),
-      transitionBuilder: widget.dialogProperties.transitionBuilder ??
+      transitionBuilder: transitionBuilder ??
           (context, animation, _, child) {
             return FadeTransition(
               opacity: CurvedAnimation(
@@ -454,10 +470,13 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
       pageBuilder: (ctx, animation, _) {
         return Dialog(
           child: SizedBox(
-            height: widget.dialogProperties.height ??
-                MediaQuery.of(context).size.height * 0.7,
-            width: widget.dialogProperties.width ??
-                MediaQuery.of(context).size.width * 0.7,
+            height: widget.shrinkWrap && widget.scrollDirection == Axis.vertical
+                ? null
+                : height ?? MediaQuery.of(context).size.height * 0.7,
+            width:
+                widget.shrinkWrap && widget.scrollDirection == Axis.horizontal
+                    ? null
+                    : width ?? MediaQuery.of(context).size.width * 0.7,
             child: _buildSelectableList(
               showDefaultActions: true,
             ),
@@ -467,56 +486,118 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
     ).then((value) => value == null ? _handleBarrierDismissed() : null);
   }
 
-  void _openDropdown() {
+  OverlayEntry? _overlayEntry;
+  late AnimationController _animationController;
+  final LayerLink _layerLink = LayerLink();
+
+  void _openOverlay({
+    Alignment alignment = Alignment.bottomCenter,
+    bool anchor = true,
+    bool avoidOverlap = false,
+    bool flexiblePosition = false,
+    bool keepInBounds = true,
+    double? height,
+    double? maxHeight,
+    double? maxWidth,
+    double? minHeight,
+    Offset? offset,
+    bool showDefaultHeader = false,
+    double? width,
+  }) {
+    if (_overlayEntry?.mounted ?? false) {
+      return;
+    }
+
+    assert(keepInBounds == false || widget.shrinkWrap == false,
+        'Cannot use keepInBounds when shrinkWrap == true. Prefer itemExtent.');
+
+    assert(height == null || widget.shrinkWrap == false,
+        'Cannot provide height when shrinkWrap == true');
+
+    assert(minHeight == null || widget.shrinkWrap == false,
+        'Cannot provide minHeight when shrinkWrap == true');
+
+    assert(maxHeight == null || widget.shrinkWrap == false,
+        'Cannot provide maxHeight when shrinkWrap == true');
+
     _cacheOriginalValue();
 
-    _SelectableListDefaultsM3 defaults = _SelectableListDefaultsM3(context);
+    if (height == null &&
+        widget.itemExtent != null &&
+        widget.scrollDirection == Axis.vertical) {
+      height = (widget.itemExtent! * _controller.items.length);
+    }
 
-    showModalDropdown(
-      alignment: widget.dropdownProperties.alignment,
-      anchorKey: widget.dropdownProperties.anchor ? _anchorKey : null,
-      backgroundColor: widget.backgroundColor,
-      barrierColor: widget.barrierColor,
-      barrierDismissible: widget.barrierDismissable,
-      barrierLabel: widget.barrierLabel,
-      context: context,
-      constraints: widget.dropdownProperties.constraints,
-      elevation: widget.elevation,
-      offset: widget.dropdownProperties.offset,
-      shape: widget.shape ?? defaults.shape,
-      width: widget.dropdownProperties.width,
-      builder: (ctx) {
-        return _buildSelectableList(
-          elevation: widget.elevation,
+    if (width == null &&
+        widget.itemExtent != null &&
+        widget.scrollDirection == Axis.horizontal) {
+      width = (widget.itemExtent! * _controller.items.length);
+    }
+
+    _overlayEntry = OverlayEntry(
+      builder: (ctx) => OverlayAnchorEntry(
+        alignment: alignment,
+        anchor: anchor,
+        anchorKey: _anchorKey,
+        animationController: _animationController,
+        avoidOverlap: avoidOverlap,
+        flexiblePosition: flexiblePosition,
+        height: height,
+        keepInBounds: keepInBounds,
+        layerLink: _layerLink,
+        maxHeight: maxHeight,
+        maxWidth: maxWidth,
+        minHeight: minHeight,
+        offset: offset,
+        onTapOutside: (event) {
+          _removeOverlay();
+          _handleBarrierDismissed(resetOnBarrierDismissed: false);
+        },
+        sizeXToChild: widget.shrinkWrap,
+        width: width,
+        child: _buildSelectableList(
           headerPadding: const EdgeInsets.fromLTRB(12, 8, 8, 0),
           padding: EdgeInsets.zero,
+          showDefaultHeader: showDefaultHeader,
           showDefaultActions: false,
-          showDefaultHeader: false,
-        );
-      },
-    ).then((value) => value == null
-        ? _handleBarrierDismissed(resetOnBarrierDismissed: false)
-        : null);
+        ),
+      ),
+    );
+
+    Overlay.of(context).insert(_overlayEntry!);
+    _animationController.forward();
   }
 
-  void _openSideSheet() {
+  void _removeOverlay() async {
+    await _animationController.reverse();
+    if (_overlayEntry?.mounted ?? false) {
+      _overlayEntry?.remove();
+    }
+  }
+
+  void _openSideSheet({
+    final double? axisAlignment,
+    final TextDirection direction = TextDirection.ltr,
+    final RouteTransitionsBuilder? transitionBuilder,
+    final double? width,
+    final EdgeInsetsGeometry insetPadding = const EdgeInsets.all(8),
+  }) {
     _cacheOriginalValue();
 
     showModalSideSheet(
-      axisAlignment: widget.sideSheetProperties.axisAlignment,
+      axisAlignment: axisAlignment,
       barrierColor: widget.barrierColor,
       barrierDismissible: widget.barrierDismissable,
       barrierLabel: widget.barrierLabel,
       context: context,
-      direction: widget.sideSheetProperties.direction,
-      transitionBuilder: widget.sideSheetProperties.transitionBuilder,
-      width: widget.sideSheetProperties.width,
+      direction: direction,
+      transitionBuilder: transitionBuilder,
+      width: width,
       builder: (ctx) {
         return Padding(
-          padding: widget.sideSheetProperties.insetPadding,
+          padding: insetPadding,
           child: Padding(
-            padding: widget.viewPadding ??
-                EdgeInsets.zero, // ?? const EdgeInsets.all(24),
+            padding: widget.viewPadding ?? EdgeInsets.zero,
             child: _buildSelectableList(
               elevation: widget.elevation,
             ),
@@ -535,8 +616,8 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
   }
 
   // Called when the barrier is dismissed to reset the controller.value.
-  // Dropdown is an exception since it doesn't have default `actions`, therefore
-  // tapping the barrier is not considered a 'cancel' action.
+  // Dropdown or overlay is an exception since it doesn't have default `actions`,
+  // therefore tapping the barrier is not considered a 'cancel' action.
   void _resetValue(List<T> originalValue) {
     if (_controller is MultiSelectController) {
       (_controller as MultiSelectController<T>).value = originalValue;
@@ -564,7 +645,11 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        field,
+        // used for overlay
+        CompositedTransformTarget(
+          link: _layerLink,
+          child: field,
+        ),
         _buildValidation(state),
       ],
     );
@@ -696,7 +781,8 @@ class __DefaultHeaderState<T> extends State<_DefaultHeader<T>> {
                       prefixIcon: IconButton(
                         onPressed: () {
                           widget.controller.setSearchValue("");
-                          widget.controller.setFilteredItems(null, false);
+                          widget.controller
+                              .setFilteredItems(null, notify: false);
                           widget.controller.setSearchActive(false);
                         },
                         icon: Icon(
@@ -838,44 +924,106 @@ abstract class SelectableListController<T> extends ChangeNotifier {
   bool get searchActive => _searchActive;
   TextEditingController get searchController => _searchController;
 
-  void openDialog() {
-    _anchor?._openDialog();
+  void openDialog({
+    final double? height,
+    final RouteTransitionsBuilder? transitionBuilder,
+    final double? width,
+  }) {
+    _anchor?._openDialog(
+      height: height,
+      transitionBuilder: transitionBuilder,
+      width: width,
+    );
   }
 
-  void openBottomSheet() {
-    _anchor?._openBottomSheet();
+  void openBottomSheet({
+    final double initialChildSize = 0.5,
+    final double minChildSize = 0.25,
+    final double maxChildSize = 1.0,
+    final bool? showDragHandle,
+  }) {
+    _anchor?._openBottomSheet(
+      initialChildSize: initialChildSize,
+      maxChildSize: maxChildSize,
+      minChildSize: minChildSize,
+      showDragHandle: showDragHandle,
+    );
   }
 
-  void openSideSheet() {
-    _anchor?._openSideSheet();
+  void openSideSheet({
+    final double? axisAlignment,
+    final TextDirection direction = TextDirection.ltr,
+    final RouteTransitionsBuilder? transitionBuilder,
+    final double? width,
+    final EdgeInsetsGeometry insetPadding = const EdgeInsets.all(8),
+  }) {
+    _anchor?._openSideSheet(
+      axisAlignment: axisAlignment,
+      direction: direction,
+      transitionBuilder: transitionBuilder,
+      width: width,
+      insetPadding: insetPadding,
+    );
   }
 
-  void openDropdown() {
-    _anchor?._openDropdown();
+  /// Opens the SelectableList in overlay as an anchored dropdown by default.
+  ///
+  /// If the list has `shrinkWrap` == true, the overlay will be sized to the
+  /// child widget since the size is not calculated ahead of time. Therefore
+  /// `height`, `minHeight`, `maxHeight`, and `keepInBounds` cannot be used with
+  /// shrinkWrap. Using `itemExtent` instead can achieve the same result and is
+  /// compatible with those parameters.
+  void openOverlay({
+    Alignment alignment = Alignment.bottomCenter,
+    bool anchor = true,
+    bool avoidOverlap = false,
+    bool flexiblePosition = false,
+    double? height,
+    bool keepInBounds = false,
+    double? maxHeight,
+    double? maxWidth,
+    double? minHeight,
+    Offset? offset,
+    bool showDefaultHeader = false,
+    double? width,
+  }) {
+    _anchor?._openOverlay(
+      alignment: alignment,
+      anchor: anchor,
+      avoidOverlap: avoidOverlap,
+      flexiblePosition: flexiblePosition,
+      height: height,
+      keepInBounds: keepInBounds,
+      maxHeight: maxHeight,
+      maxWidth: maxWidth,
+      minHeight: minHeight,
+      offset: offset,
+      showDefaultHeader: showDefaultHeader,
+    );
   }
 
-  void setItems(List<T> items, [bool notify = true]) {
+  void setItems(List<T> items, {bool notify = true}) {
     _items = [...items];
     if (notify) notifyListeners();
   }
 
-  void setFilteredItems(List<T>? filteredItems, [bool notify = true]) {
+  void setFilteredItems(List<T>? filteredItems, {bool notify = true}) {
     _filteredItems = filteredItems != null ? [...filteredItems] : null;
     if (notify) notifyListeners();
   }
 
-  void setSearchActive(bool val, [bool notify = true]) {
+  void setSearchActive(bool val, {bool notify = true}) {
     _searchActive = val;
     if (notify) notifyListeners();
   }
 
-  void setSearchValue(String val, [bool notify = false]) {
-    searchController.text = val;
+  void setLoading(bool isLoading, {bool notify = true}) {
+    _loading = isLoading;
     if (notify) notifyListeners();
   }
 
-  void setLoading(bool isLoading, [bool notify = false]) {
-    _loading = isLoading;
+  void setSearchValue(String val, {bool notify = false}) {
+    searchController.text = val;
     if (notify) notifyListeners();
   }
 
@@ -970,70 +1118,6 @@ class MultiSelectController<T> extends SelectableListController<T> {
   bool isItemChecked(T item) {
     return value.contains(item);
   }
-}
-
-class BottomSheetProperties {
-  final double initialChildSize;
-  final double minChildSize;
-  final double maxChildSize;
-
-  final bool? showDragHandle;
-
-  const BottomSheetProperties({
-    this.initialChildSize = 0.4,
-    this.maxChildSize = 1.0,
-    this.minChildSize = 0.25,
-    this.showDragHandle,
-  });
-}
-
-class DialogProperties {
-  final RouteTransitionsBuilder? transitionBuilder;
-  final double? height;
-  final double? width;
-
-  const DialogProperties({
-    this.transitionBuilder,
-    this.height,
-    this.width,
-  });
-}
-
-class DropdownProperties {
-  final DropdownAligmnent alignment;
-
-  /// Determines whether the `anchorKey` will be passed to `showDropdown`.
-  final bool anchor;
-  final BoxConstraints? constraints;
-
-  /// Applied to the starting position of the dropdown.
-  final Offset? offset;
-
-  final double? width;
-
-  const DropdownProperties({
-    this.alignment = DropdownAligmnent.center,
-    this.anchor = true,
-    this.constraints,
-    this.offset,
-    this.width,
-  });
-}
-
-class SideSheetProperties {
-  final double? axisAlignment;
-  final TextDirection direction;
-  final RouteTransitionsBuilder? transitionBuilder;
-  final double? width;
-  final EdgeInsetsGeometry insetPadding;
-
-  const SideSheetProperties({
-    this.axisAlignment,
-    this.direction = TextDirection.ltr,
-    this.insetPadding = const EdgeInsets.all(8),
-    this.transitionBuilder,
-    this.width,
-  });
 }
 
 class _SelectableListDefaultsM3 {

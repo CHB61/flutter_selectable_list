@@ -21,7 +21,6 @@ class SelectableList<T> extends StatefulWidget {
     this.scrollThreshold = 0.85,
     this.onScrollThresholdReached,
     void Function(T?)? onSelectionChanged,
-    this.onSearchTextChanged,
     this.pinSelectedValue = false,
     this.progressIndicator,
     this.scrollController,
@@ -63,7 +62,6 @@ class SelectableList<T> extends StatefulWidget {
     this.scrollThreshold = 0.85,
     this.onScrollThresholdReached,
     OnMultiSelectionChanged<T> onSelectionChanged,
-    this.onSearchTextChanged,
     this.pinSelectedValue = false,
     this.progressIndicator,
     this.scrollController,
@@ -144,8 +142,6 @@ class SelectableList<T> extends StatefulWidget {
   final OnMultiSelectionChanged<T> onMultiSelectionChanged;
   final void Function(T?)? onSingleSelectionChanged;
 
-  final void Function(String)? onSearchTextChanged;
-
   final bool pinSelectedValue;
 
   /// Widget to be displayed when [SelectableListController.loading] is `true`.
@@ -165,7 +161,7 @@ class SelectableList<T> extends StatefulWidget {
   /// Creates a listener on the [scrollController] that calls this function
   /// when the [scrollThreshold] is reached. It will only be called once
   /// unless the `maxScrollExtent` changes.
-  final Function? onScrollThresholdReached;
+  final Function(SelectableListController<T>)? onScrollThresholdReached;
 
   final ScrollController? scrollController;
   final Axis scrollDirection;
@@ -245,7 +241,7 @@ class _SelectableListState<T> extends State<SelectableList<T>> {
       double currentPosition = _scrollController.position.pixels;
 
       if (currentPosition > nextPageTrigger && !_calledMaxExtent) {
-        widget.onScrollThresholdReached?.call();
+        widget.onScrollThresholdReached?.call(_controller);
         _calledMaxExtent = true;
       }
     });

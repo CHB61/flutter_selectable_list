@@ -38,16 +38,16 @@ class _InfiniteScrollExampleState extends State<InfiniteScrollExample> {
   }
 
   // Simulate an API call to get more data.
-  Future<void> _getMoreData() async {
-    _controller.setLoading(true, true);
+  Future<void> _getMoreData(SelectableListController controller) async {
+    controller.setLoading(true);
     List<Company> moreCompanies = await _dataService.getDataAsync(
       delay: 1000,
       limit: 25,
       offset: _companies.length,
     );
     _companies.addAll(moreCompanies);
-    _controller.setLoading(false);
-    _controller.setItems(_companies);
+    controller.setLoading(false);
+    controller.setItems(_companies);
   }
 
   @override

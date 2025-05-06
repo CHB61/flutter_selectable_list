@@ -1,3 +1,7 @@
+## 0.0.11
+
+- Added `openOverlay` as a function to SelectableListController. Removed `openDropdown`.
+
 ## 0.0.10
 
 - Added `shrinkWrap` parameter.

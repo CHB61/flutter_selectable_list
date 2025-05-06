@@ -109,8 +109,8 @@ mixin SearchMixin<T extends StatefulWidget> on State<T> {
   }
 
   // Simulate an API call to get more data.
-  Future<void> getMoreData() async {
-    controller.setLoading(true, true);
+  Future<void> getMoreData(SelectableListController controller) async {
+    controller.setLoading(true);
     int offset;
 
     if (controller.filteredItems?.isNotEmpty ?? false) {
@@ -166,7 +166,7 @@ mixin SearchMixin<T extends StatefulWidget> on State<T> {
                   title: Text(e),
                   leading: const Icon(Icons.history),
                   onTap: () {
-                    controller.setSearchValue(e, false);
+                    controller.setSearchValue(e, notify: false);
                     search(e);
                     onTap?.call();
                   },
@@ -196,7 +196,7 @@ mixin SearchMixin<T extends StatefulWidget> on State<T> {
                   leading: const Icon(Icons.search),
                   title: Text(e.name),
                   onTap: () {
-                    controller.setSearchValue(e.name, false);
+                    controller.setSearchValue(e.name, notify: false);
                     search(e.name);
                     onTap?.call();
                   },
@@ -246,7 +246,7 @@ mixin SearchMixin<T extends StatefulWidget> on State<T> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         child: InkWell(
           onTap: () {
-            controller.setSearchValue(company, false);
+            controller.setSearchValue(company, notify: false);
             search(company);
           },
           borderRadius: BorderRadius.circular(10),

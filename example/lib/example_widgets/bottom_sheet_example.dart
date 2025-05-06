@@ -29,7 +29,7 @@ class _BottomSheetExampleState extends State<BottomSheetExample> {
       child: SizedBox(
         child: TextButton(
           onPressed: () {
-            showModalBottomSheet(
+            showBottomSheet(
               context: context,
               clipBehavior: Clip.antiAlias,
               shape: const RoundedRectangleBorder(

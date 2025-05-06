@@ -43,7 +43,7 @@ class ExampleHeader extends StatelessWidget {
                 leading: IconButton(
                   onPressed: () {
                     controller.setSearchValue("");
-                    controller.setFilteredItems(null, false);
+                    controller.setFilteredItems(null, notify: false);
                     controller.setSearchActive(!controller.searchActive);
                   },
                   icon: controller.searchActive
