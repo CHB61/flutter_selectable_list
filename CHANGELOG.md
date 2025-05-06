@@ -1,3 +1,7 @@
+## 0.0.12
+
+- Added `width` and `minWidth` to `openOverlay` function.
+
 ## 0.0.11
 
 - Added `openOverlay` as a function to SelectableListController. Removed `openDropdown`.

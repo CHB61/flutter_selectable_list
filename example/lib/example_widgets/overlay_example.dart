@@ -54,13 +54,13 @@ class _OverlayExampleState extends State<OverlayExample> {
                       _formFieldKey.currentState?.validate();
                       _textController.text = item.name;
                     },
-                    shrinkWrap: true,
-                    // itemExtent: 48,
+                    itemExtent: 48,
                     builder: (controller, state) {
                       return ExampleAnchorField(
                         controller: controller,
                         textController: _textController,
                         onPressed: () => controller.openOverlay(
+                            // alignment: Alignment.centerRight,
                             // minHeight: 250,
                             // keepInBounds: true,
                             // avoidOverlap: true,

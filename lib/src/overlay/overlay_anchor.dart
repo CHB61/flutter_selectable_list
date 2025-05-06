@@ -545,7 +545,10 @@ class _OverlayAnchorEntryState extends State<OverlayAnchorEntry> {
     double minWidth = widget.minWidth ?? 0;
     double maxWidth = widget.maxWidth ?? availableWidth;
     final double width = widget.width ?? anchorRect?.width ?? maxWidth;
-    final double clampedWidth = width.clamp(minWidth, maxWidth);
+    final double clampedWidth = width.clamp(
+      minWidth,
+      maxWidth > minWidth ? maxWidth : minWidth,
+    );
 
     double availableHeight =
         _getAvailableHeight(widget.alignment.y, anchorRect, screenSize);

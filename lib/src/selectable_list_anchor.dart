@@ -500,6 +500,7 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>>
     double? maxHeight,
     double? maxWidth,
     double? minHeight,
+    double? minWidth,
     Offset? offset,
     bool showDefaultHeader = false,
     double? width,
@@ -548,6 +549,7 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>>
         maxHeight: maxHeight,
         maxWidth: maxWidth,
         minHeight: minHeight,
+        minWidth: minWidth,
         offset: offset,
         onTapOutside: (event) {
           _removeOverlay();
@@ -983,6 +985,7 @@ abstract class SelectableListController<T> extends ChangeNotifier {
     double? maxHeight,
     double? maxWidth,
     double? minHeight,
+    double? minWidth,
     Offset? offset,
     bool showDefaultHeader = false,
     double? width,
@@ -997,8 +1000,10 @@ abstract class SelectableListController<T> extends ChangeNotifier {
       maxHeight: maxHeight,
       maxWidth: maxWidth,
       minHeight: minHeight,
+      minWidth: minWidth,
       offset: offset,
       showDefaultHeader: showDefaultHeader,
+      width: width,
     );
   }
 

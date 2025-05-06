@@ -19,21 +19,18 @@ class ExampleAnchorField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 16.0),
-      child: TextField(
-        canRequestFocus: false,
-        controller: textController,
-        mouseCursor: SystemMouseCursors.click,
-        onTap: onPressed,
-        decoration: InputDecoration(
-          hintText: label,
-          enabledBorder: OutlineInputBorder(
-            borderSide: BorderSide(
-              color: state?.hasError ?? false
-                  ? Theme.of(context).colorScheme.error
-                  : Colors.black87,
-            ),
+    return TextField(
+      canRequestFocus: false,
+      controller: textController,
+      mouseCursor: SystemMouseCursors.click,
+      onTap: onPressed,
+      decoration: InputDecoration(
+        hintText: label,
+        enabledBorder: OutlineInputBorder(
+          borderSide: BorderSide(
+            color: state?.hasError ?? false
+                ? Theme.of(context).colorScheme.error
+                : Colors.black87,
           ),
         ),
       ),
