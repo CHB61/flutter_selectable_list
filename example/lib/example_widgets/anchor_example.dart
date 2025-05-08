@@ -26,7 +26,7 @@ class _AnchorExampleState extends State<AnchorExample> {
   Future<void> _getData() async {
     _controller.setLoading(true);
     List<Company> companies =
-        await _dataService.getDataAsync(delay: 500, limit: 5);
+        await _dataService.getDataAsync(delay: 500, limit: 25);
     _controller.setLoading(false);
     _controller.setItems(companies);
   }

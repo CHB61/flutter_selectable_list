@@ -1,3 +1,7 @@
+## 0.0.13
+
+- Replaced SelectableList variables `header` and `actions` with `headerBuilder` and `actionsBuilder`.
+
 ## 0.0.12
 
 - Added `width` and `minWidth` to `openOverlay` function.

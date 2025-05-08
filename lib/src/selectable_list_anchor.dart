@@ -6,7 +6,7 @@ import 'selectable_list.dart';
 class SelectableListAnchor<T> extends StatefulWidget {
   const SelectableListAnchor.single({
     super.key,
-    this.actions,
+    this.actionsBuilder,
     this.autovalidateMode = AutovalidateMode.disabled,
     this.backgroundColor,
     this.barrierColor = const Color(0x80000000),
@@ -20,7 +20,7 @@ class SelectableListAnchor<T> extends StatefulWidget {
     this.floatSelectedValue = false,
     this.foregroundColor,
     this.formFieldKey,
-    this.header,
+    this.headerBuilder,
     this.headerTitle,
     this.isThreeLine = false,
     this.itemBuilder,
@@ -68,7 +68,7 @@ class SelectableListAnchor<T> extends StatefulWidget {
 
   const SelectableListAnchor.multi({
     super.key,
-    this.actions,
+    this.actionsBuilder,
     this.autovalidateMode = AutovalidateMode.disabled,
     this.backgroundColor,
     this.barrierColor = const Color(0x80000000),
@@ -82,7 +82,7 @@ class SelectableListAnchor<T> extends StatefulWidget {
     this.floatSelectedValue = false,
     this.foregroundColor,
     this.formFieldKey,
-    this.header,
+    this.headerBuilder,
     this.headerTitle,
     this.isThreeLine = false,
     this.itemBuilder,
@@ -128,7 +128,7 @@ class SelectableListAnchor<T> extends StatefulWidget {
         assert(items == null || controller == null),
         assert(items != null || controller != null);
 
-  final Widget? actions;
+  final Widget? Function()? actionsBuilder;
   final AutovalidateMode autovalidateMode;
   final Color? backgroundColor;
   final Color barrierColor;
@@ -150,7 +150,7 @@ class SelectableListAnchor<T> extends StatefulWidget {
   final Color? foregroundColor;
 
   /// Replaces the default header of the view.
-  final Widget? header;
+  final Widget? Function()? headerBuilder;
 
   /// The default value is "Select" and the [TextStyle] uses [TextTheme.titleLarge].
   final String? headerTitle;
@@ -299,7 +299,7 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            widget.header ??
+            widget.headerBuilder?.call() ??
                 (showDefaultHeader
                     ? _DefaultHeader(
                         controller: _controller,
@@ -311,7 +311,7 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>>
                         title: widget.headerTitle,
                       )
                     : Container()),
-            if (widget.header != null || showDefaultHeader)
+            if (widget.headerBuilder != null || showDefaultHeader)
               Divider(
                 height: 1,
                 color: widget.dividerColor,
@@ -374,12 +374,12 @@ class _SelectableListAnchorState<T> extends State<SelectableListAnchor<T>>
                       surfaceTintColor: widget.surfaceTintColor,
                     ),
             ),
-            if (widget.actions != null || showDefaultActions)
+            if (widget.actionsBuilder != null || showDefaultActions)
               Divider(
                 height: 1,
                 color: widget.dividerColor,
               ),
-            widget.actions ??
+            widget.actionsBuilder?.call() ??
                 (showDefaultActions
                     ? _DefaultActions(
                         controller: _controller,
