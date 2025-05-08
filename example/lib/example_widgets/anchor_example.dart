@@ -12,7 +12,7 @@ class AnchorExample extends StatefulWidget {
 }
 
 class _AnchorExampleState extends State<AnchorExample> {
-  final MultiSelectController<Company> _controller = MultiSelectController();
+  final SingleSelectController<Company> _controller = SingleSelectController();
   final TextEditingController _textController = TextEditingController();
   final GlobalKey<FormFieldState> _formFieldKey = GlobalKey<FormFieldState>();
   final DataService _dataService = DataService();
@@ -37,15 +37,16 @@ class _AnchorExampleState extends State<AnchorExample> {
       alignment: Alignment.topCenter,
       child: SizedBox(
         width: 400,
-        child: SelectableListAnchor.multi(
+        child: SelectableListAnchor.single(
           controller: _controller,
           enableDefaultSearch: true,
           formFieldKey: _formFieldKey,
           itemTitle: (e) => e.name,
           pinSelectedValue: true,
-          onSelectionChanged: (value, item, checked) {
+          onSelectionChanged: (value) {
             _formFieldKey.currentState?.validate();
-            _textController.text = item.name;
+            _textController.text = value?.name ?? "";
+            _controller.removeOverlay();
           },
           validator: (value) {
             if (value == null) return 'Required';
@@ -55,7 +56,7 @@ class _AnchorExampleState extends State<AnchorExample> {
             return ExampleAnchorField(
               controller: controller,
               textController: _textController,
-              onPressed: () => controller.openDialog(),
+              onPressed: () => controller.openOverlay(),
               label: "Open View",
               state: state,
             );

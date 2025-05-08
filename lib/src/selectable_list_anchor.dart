@@ -1007,6 +1007,10 @@ abstract class SelectableListController<T> extends ChangeNotifier {
     );
   }
 
+  void removeOverlay() {
+    _anchor?._removeOverlay();
+  }
+
   void setItems(List<T> items, {bool notify = true}) {
     _items = [...items];
     if (notify) notifyListeners();
