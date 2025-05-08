@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_selectable_list/src/overlay/overlay_anchor.dart';
-import 'side_sheet/side_sheet.dart';
+import 'package:flutter_selectable_list/src/util/conditional_parent_widget.dart';
+import 'package:flutter_selectable_list/src/util/overlay/overlay_anchor.dart';
+import 'util/side_sheet/side_sheet.dart';
 import 'selectable_list.dart';
 
 class SelectableListAnchor<T> extends StatefulWidget {
@@ -180,7 +181,7 @@ class SelectableListAnchor<T> extends StatefulWidget {
   final void Function(List<T>)? onConfirmMulti;
 
   /// Callback for when scroll extent is reached.
-  final Function(SelectableListController)? onScrollThresholdReached;
+  final Function(SelectableListController<T>)? onScrollThresholdReached;
 
   final OnMultiSelectionChanged<T> onMultiSelectionChanged;
 

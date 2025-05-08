@@ -1,3 +1,7 @@
+## 0.0.14
+
+- Added function `removeOverlay` to `SelectableListController`.
+
 ## 0.0.13
 
 - Replaced SelectableList variables `header` and `actions` with `headerBuilder` and `actionsBuilder`.

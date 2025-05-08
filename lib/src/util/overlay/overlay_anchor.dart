@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_selectable_list/src/util/conditional_parent_widget.dart';
 
 class OverlayAnchor extends StatefulWidget {
   final Alignment alignment;
@@ -666,23 +667,5 @@ class _OverlayRect extends Rect {
       topLeft: topLeft,
       bottomRight: bottomRight,
     );
-  }
-}
-
-class ConditionalParentWidget extends StatelessWidget {
-  const ConditionalParentWidget({
-    super.key,
-    required this.condition,
-    required this.child,
-    required this.parentBuilder,
-  });
-
-  final Widget child;
-  final bool condition;
-  final Widget Function(Widget child) parentBuilder;
-
-  @override
-  Widget build(BuildContext context) {
-    return condition ? parentBuilder(child) : child;
   }
 }
